@@ -4,12 +4,34 @@
 \alias{tm_load}
 \title{Load GMD special collection for Project X}
 \usage{
-tm_load(country = NULL, year = NULL)
+tm_load(
+  country,
+  year = NA,
+  survey = NA,
+  vermast = NA,
+  veralt = NA,
+  type = "GPWG",
+  maindir = ":/01.PovcalNet/01.Vintage_control",
+  drive = "p"
+)
 }
 \arguments{
-\item{country}{character}
+\item{country}{character: list of country iso3 code (accepts multiple) or
+`all`.}
 
-\item{year}{numeric}
+\item{year}{numeric:  list of years.}
+
+\item{survey}{charecter: In case there are more than one surveys for the same year}
+
+\item{vermast}{numeric: Master version. Default is the latest version}
+
+\item{veralt}{numeric: Alternative version. Default is the latest version}
+
+\item{type}{character: Collection. Default is GPWG}
+
+\item{maindir}{character: Main directory where data is stored}
+
+\item{drive}{character: Drive letter when data is stored. Default is P}
 }
 \value{
 data frame
@@ -18,7 +40,6 @@ data frame
 Load GMD special collection for Project X
 }
 \examples{
-df <- tm(country = "COL", year = 2015)
-df <- tm(country = c("COL", "ARG"), year = c(2012, 2012))
+df <- tm_load(country = "COL", year = 2015)
 
 }

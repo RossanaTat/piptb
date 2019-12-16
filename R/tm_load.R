@@ -1,14 +1,23 @@
 #' Load GMD special collection for Project X
 #'
-#' @param country character
-#' @param year numeric
+#' @param country character: list of country iso3 code (accepts multiple) or
+#' `all`.
+#' @param year numeric:  list of years.
+#' @param survey charecter: In case there are more than one surveys for the same year
+#' @param vermast numeric: Master version. Default is the latest version
+#' @param veralt numeric: Alternative version. Default is the latest version
+#' @param type character: Collection. Default is GPWG
+#' @param maindir character: Main directory where data is stored
+#' @param drive character: Drive letter when data is stored. Default is P
 #'
 #' @return data frame
 #' @export
 #'
+#' @importFrom magrittr %>%
+#'
+#'
 #' @examples
-#' df <- tm(country = "COL", year = 2015)
-#' df <- tm(country = c("COL", "ARG"), year = c(2012, 2012))
+#' df <- tm_load(country = "COL", year = 2015)
 #'
 tm_load <- function(country,
                     year = NA,
