@@ -1,13 +1,13 @@
 Package: tablemaker
-Title: What the Package Does (One Line, Title Case)
+Title: Compute estimates for the Table Maker UI of Project X
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "R.Andres",
+           family = "Castaneda",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: What license it uses
+           email = "acastanedaa@worldbank.org")
+Description: Load dta from datalibweb, tidy the data, and perform the calculations requested by the user via the API.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.0.2
