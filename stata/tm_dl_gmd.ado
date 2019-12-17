@@ -83,12 +83,21 @@ while (`i' < `n') {
 		continue
 	}
 	
+	//========================================================
+	// Create characteristics
+	//========================================================
+	
 	*------Parameter of the file
 	
 	if regexm("`r(filename)'", "(.*)(\.dta)$") local filename = regexs(1)
 	
+	local filename  = regexr("`filename'", "([a-zA-Z]+)$", "PX")
+	
 	local dirname "`maindir'/`country'/`country'_`year'_`survey'"
-	local dirname "`dirname'/`survey_id'/Data"
+	local dirname "`dirname'/`filename'/Data"
+	
+	
+	
 	
 	char _dta[tm_datetimeHRF]    "`datetimeHRF'" 
 	char _dta[tm_datetime]       "`date_time'" 
@@ -96,7 +105,71 @@ while (`i' < `n') {
 	char _dta[countrycode]       "`country'"
 	char _dta[year]              "`year'"
 	char _dta[survey]            "`survey'"
-	char _dta[survey_id]         "`survey_id'"
+	char _dta[orig_id]           "`survey_id'"
+	char _dta[projectX_id]       "`filename'"
+	
+	
+	//========================================================
+	// Keep vetted variables
+	//========================================================
+	
+	*----------1.1: clean weight variable
+	
+	cap confirm var weight, exact 
+	if (_rc) {
+		cap confirm var weight_p, exact 
+		if (_rc == 0) rename weight_p weight
+		else {
+			cap confirm var weight_h, exact 
+			if (_rc == 0) rename weight_h weight
+			else {
+				noi disp in red "no weight variable found for country(`country') year(`year') veralt(`veralt') "
+				continue
+			}
+		}
+	}
+	
+	
+	* make sure no information is lost
+	svyset, clear
+	recast double welfare
+	recast double weight    
+	
+	* monthly data
+	quietly replace welfare=welfare/365
+	
+	* keep weight and welfare
+	keep weight welfare
+	sort welfare
+	
+	* drop missing values
+	quietly drop if welfare < 0 | welfare == .
+	quietly drop if weight <= 0 | weight == .
+	
+	order weight welfare
+	
+	//------------ variables in PPP
+	
+	cap gen double welfare_ppp = welfare/cpi2011/icp2011
+	
+	
+	//------------ vetted variables
+	
+	local keepvars "welfare welfare_ppp weight subnatid subnatid2 subnatid3 age male urban hsize cpi2011 icp2011"
+	
+	
+	local ks ""
+	foreach k of local keepvars {
+		cap confirm variable `k', exact
+		if (_rc) gen `k' = . 
+	}
+	
+	keep `keepvars'
+	
+	
+	//========================================================
+	// replace file or save it
+	//========================================================
 	
 	* Confirm file exists
 	cap confirm file "`dirname'/`filename'.dta"
@@ -108,8 +181,8 @@ while (`i' < `n') {
 		if (`direxists' != 1) { // if folder does not exist
 			cap mkdir "`maindir'/`country'"
 			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'"
-			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'"
-			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'/Data"
+			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`filename'"
+			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`filename'/Data"
 		}
 		
 		datasignature set, reset saving("`dirname'/`filename'", replace)
@@ -128,15 +201,17 @@ while (`i' < `n') {
 				preserve   // I cannot use  copy because I nees the tm_datetime char
 				
 				use "`dirname'/`filename'.dta", clear
-				saveold "`dirname'/_vintage/`filename'_`:char _dta[tm_datetime]'", clear
+				saveold "`dirname'/_vintage/`filename'_`:char _dta[tm_datetime]'", replace
 				
 				restore
 				
 				saveold "`dirname'/`filename'.dta", replace
 				local status "replaced"
+				noi disp in y "Data has been replaced"
 			}
 			
 			else { // if replace option not selected
+				noi disp in r "Data has not been replaced. Use uption {cmd:replace}"
 				local status "not replaced"
 			}
 		}

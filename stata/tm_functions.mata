@@ -22,10 +22,8 @@ void tm_ind(string matrix R) {
 
 string matrix tm_info(matrix P) {
 
-	survey = st_local("survey_id")
-
-	status = st_local("status")
-
+	survey =  st_local("survey_id")
+	status =  st_local("status")
 	dlwnote = st_local("dlwnote")
 
 
