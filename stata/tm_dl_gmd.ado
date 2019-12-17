@@ -71,8 +71,9 @@ while (`i' < `n') {
 	mata: tm_ind(R)
 	
 	*--------------------2.2: Load data
-	cap datalibweb, country(`country') year(`year') surveyid(`survey')  /*
-	*/   type(GMD) mod(GPWG) vermast(`vermast') veralt(`veralt') clear
+	local dwl_execute "datalibweb, country(`country') year(`year') surveyid(`survey') type(GMD) mod(GPWG) vermast(`vermast') veralt(`veralt') clear"
+	
+	cap `dwl_execute'
 	
 	if (_rc) {
 		local status "dlw error"
@@ -148,7 +149,12 @@ while (`i' < `n') {
 	//------------ variables in PPP
 	
 	cap gen double welfare_ppp = welfare/cpi2011/icp2011
-	
+	if (_rc) {
+		noi disp in red "Error creating welfare_ppp in `survey_id'" _n ///
+		"Raw data: {stata `dwl_execute'}"
+		continue
+	}
+	pause after converting to ppp
 	
 	//------------ vetted variables
 	
