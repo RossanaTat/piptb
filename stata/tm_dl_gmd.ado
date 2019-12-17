@@ -78,7 +78,7 @@ while (`i' < `n') {
 	if (_rc) {
 		local status "dlw error"
 		
-		local dlwnote "datalibweb, country(`country') year(`year') surveyid(`survey') type(GMD) mod(GPWG) vermast(`vermast') veralt(`veralt') clear"
+		local dlwnote "`dwl_execute'"
 		
 		mata: P = tm_info(P)
 		continue
