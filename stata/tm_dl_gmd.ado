@@ -94,7 +94,7 @@ while (`i' < `n') {
 	local filename  = regexr("`filename'", "([a-zA-Z]+)$", "PX")
 	
 	local dirname "`maindir'/`country'/`country'_`year'_`survey'"
-	local dirname "`dirname'/`filename'/Data"
+	local dirname "`dirname'/`survey_id'/Data"
 	
 	
 	
@@ -137,9 +137,6 @@ while (`i' < `n') {
 	
 	* monthly data
 	quietly replace welfare=welfare/365
-	
-	* keep weight and welfare
-	keep weight welfare
 	sort welfare
 	
 	* drop missing values
@@ -181,8 +178,8 @@ while (`i' < `n') {
 		if (`direxists' != 1) { // if folder does not exist
 			cap mkdir "`maindir'/`country'"
 			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'"
-			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`filename'"
-			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`filename'/Data"
+			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'"
+			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'/Data"
 		}
 		
 		datasignature set, reset saving("`dirname'/`filename'", replace)

@@ -24,8 +24,8 @@ tm_load <- function(country,
                     survey = NA,
                     vermast = NA,
                     veralt = NA,
-                    type = "GPWG",
-                    maindir = ":/01.PovcalNet/01.Vintage_control",
+                    type = "PX",
+                    maindir = ":/03.ProjectX/data",
                     drive = "p") {
 
 
@@ -36,7 +36,7 @@ tm_load <- function(country,
   maindir <- paste0(drive, maindir)
 
   if (!dir.exists(maindir)) {
-    maindir <- "//wbntpcifs/povcalnet/01.PovcalNet/01.Vintage_control"
+    maindir <- "//wbntpcifs/povcalnet/03.ProjectX/data"
   }
   if (!dir.exists(maindir)) {
     st_msg <- paste0("main directory `", maindir,
@@ -138,7 +138,7 @@ tm_load <- function(country,
     "M", paste0("v", veralt), "A", "GMD", sep = "_"
   )
 
-  module <- "GPWG"
+  module <- "PX"
   filename <- paste(survid, module, sep = "_")
 
   dtadir <- paste(dir_cys, survid, "Data", paste0(filename, ".dta"), sep = "/")
