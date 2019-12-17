@@ -11,9 +11,10 @@
 #'
 #' @return
 #' @export
+#' @import assertthat
 #'
 #' @examples
-tm_build <- function(country,
+tm_build <- function(country = NA,
                      year = NA,
                      survey = NA,
                      vermast = NA,
@@ -22,6 +23,40 @@ tm_build <- function(country,
                      maindir = ":/03.ProjectX/data",
                      drive = "p") {
 
-# check that vectors are the same size.
+# CHECK inputs
+tm_check_inputs(country,
+                year,
+                survey,
+                vermast,
+                veralt,
+                type,
+                maindir,
+                drive)
+
 
 }
+
+tm_check_inputs <- function(country,
+                            year,
+                            survey,
+                            vermast,
+                            veralt,
+                            type,
+                            maindir,
+                            drive) {
+
+  assertthat::assert_that(length(country) > 0 | !(is.na(country)) ,
+                          msg = "Please submit at least ONE country")
+
+  # check that vectors are the same size.
+
+
+
+  # check years selected are available in country
+
+
+}
+
+
+
+# code that returns the years available
