@@ -25,7 +25,7 @@ tm_load <- function(country,
                     vermast = NA,
                     veralt = NA,
                     type = "PX",
-                    maindir = ":/03.ProjectX/data",
+                    maindir = ":/03.ProjectX/data/",
                     drive = "p") {
 
 
@@ -45,7 +45,7 @@ tm_load <- function(country,
   }
 
   # Country dir
-  dir_c <- paste0(maindir, "/", country)
+  dir_c <- paste0(maindir, country)
   direxists <- dir.exists(dir_c)
 
   if (!direxists) {
