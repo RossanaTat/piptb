@@ -138,6 +138,10 @@ tm_load <- function(country,
     "M", paste0("v", veralt), "A", "GMD", sep = "_"
   )
 
+  id1 = paste(country, year, sep = "_")
+  id2 = paste(country, year, survey, sep = "_")
+
+
   module <- "PX"
   filename <- paste(survid, module, sep = "_")
 
@@ -145,7 +149,15 @@ tm_load <- function(country,
 
   cat("Loading ", filename, "\n")
 
-  haven::read_dta(dtadir)
+  tb <- haven::read_dta(dtadir)
+
+  attr(tb, "filename") <- filename
+  attr(tb, "survid") <- survid
+  attr(tb, "module") <- module
+  attr(tb, "id1") <- id1
+  attr(tb, "id2") <- id2
+
+  return(tb)
 
 } # end of pcn_load()
 

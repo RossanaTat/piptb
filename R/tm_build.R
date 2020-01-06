@@ -56,7 +56,7 @@ tm_build <- function(country = NA,
                                  ))
     } # end of all() condition
   } else { # end of length(country) == 1 condition
-    to_load <- as.list(country = country  ,
+    to_load <- list(country = country  ,
                        year    = year     ,
                        survey  = survey   ,
                        vermast = vermast  ,
@@ -114,9 +114,13 @@ tm_build <- function(country = NA,
   #----------------------------------------------------------
 
 
-  lt <- purrr::map()
+  lt <- purrr::pmap(to_load, tm_load)
 
+  # get names for list
+  nn <- purrr::map_chr(seq_along(lt), ~attributes(lt[[.x]])$id1)
+  lt <- setNames(lt, nn)
 
+  return(lt)
 }  # end of tm_build main function
 
 
