@@ -26,7 +26,7 @@ tm_build <- function(country = NA,
                      drive = "p") {
 
   # check country is provided
-  assert_that(length(country) > 0 & !(is.na(country)) ,
+  assert_that(length(country) > 0 & any(!(is.na(country))) ,
               msg = "Please submit at least ONE country")
 
   #----------------------------------------------------------
@@ -54,42 +54,81 @@ tm_build <- function(country = NA,
                                      maindir = maindir  ,
                                      drive   = drive
                                  ))
-      # get independnet vectors
-      for (i in seq_along(a)) {
-        assign(names(a[i]), a[[i]])
-      }
     } # end of all() condition
-  } # end of length(country) == 1 condition
+  } else { # end of length(country) == 1 condition
+    to_load <- as.list(country = country  ,
+                       year    = year     ,
+                       survey  = survey   ,
+                       vermast = vermast  ,
+                       veralt  = veralt   ,
+                       type    = type     ,
+                       maindir = maindir  ,
+                       drive   = drive
+                       )
+  } # end of length(country) != 1
+
+  #----------------------------------------------------------
+  # Check inputs
+  #----------------------------------------------------------
+
+  # get independnet vectors
+  # here, the original vectors are modifies to make of the same length
+
+  tm_check_inputs(lt = to_load)
+
+  # dataframe with parameters expanded and rectangulized
+  df <- tibble::tibble(country = country  ,
+                       year    = year     ,
+                       survey  = survey   ,
+                       vermast = vermast  ,
+                       veralt  = veralt   ,
+                       type    = type     ,
+                       maindir = maindir  ,
+                       drive   = drive
+                       )
 
 
+  #--------- make sure that the years selected are available
+
+  # get available years in selected countries
+  countries <- unique(country)
+  av_year <- purrr::map(countries, tm_get_year) %>% # available years
+    setNames(countries)
+
+  # get selected years as list
+  se_year <- purrr::map(countries, tm_select_year, df = df) %>% # selected years
+    setNames(countries)
+
+  # check that selected years are available
+  a <- purrr::map(countries,
+                  tm_check_year,
+                  se = se_year,
+                  av = av_year) %>%
+    setNames(countries)
+
+  assert_that(!(is.numeric(unlist(a))),
+              msg = "Some of the combinations of country and year are not available\n(err. message to improve)")
+
+  #----------------------------------------------------------
+  #   Load data
+  #----------------------------------------------------------
 
 
+  lt <- purrr::map()
 
 
+}  # end of tm_build main function
 
-  # CHECK inputs
-  tm_check_inputs(country,
-                  year,
-                  survey,
-                  vermast,
-                  veralt,
-                  type,
-                  maindir,
-                  drive)
 
-}
+#----------------------------------------------------------
+#   Auxiliaty functions to tm_build
+#----------------------------------------------------------
 
-tm_check_inputs <- function(country,
-                            year,
-                            survey,
-                            vermast,
-                            veralt,
-                            type,
-                            maindir,
-                            drive) {
+
+tm_check_inputs <- function(lt) {
 
   # check that vectors are the same size.
-  assert_that(length(country) == length(year) ,
+  assert_that(length(lt$country) == length(lt$year) ,
               msg = paste0("if length of `country` is > 1, all parameter in\n",
                           "`tm_build` should be of the size as `country`. \n" ,
                           "Now, length(country) is ",
@@ -103,10 +142,13 @@ tm_check_inputs <- function(country,
 
 }
 
+#----------------------------------------------------------
+#   check years compatibility
+#----------------------------------------------------------
 
 
 # code that returns the years available
-tm_check_year <- function(country,
+tm_get_year <- function(country,
                           maindir  = ":/03.ProjectX/data/",
                           drive = "p") {
   a <- dir(path = paste0(drive, maindir, country))
@@ -114,7 +156,16 @@ tm_check_year <- function(country,
   return(a)
 }
 
+tm_select_year <- function(x, df) {
+  a <- df[df$country == x, "year"]
+}
 
-countries <- c("COL", "ARG", "BRA")
-av_year <- purrr::map(countries, tm_check_year) %>% # available years
-  setNames(countries)
+tm_check_year <- function(x, se, av) {
+  a <- !(se[[x]][[1]]  %in% av[[x]])
+
+  if (any(a == TRUE)) {
+    b <- se[[x]][a,]
+  } else {
+    b <- NULL
+  }
+}
