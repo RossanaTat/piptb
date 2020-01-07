@@ -133,7 +133,7 @@ tm_load <- function(country,
 
   #--------- parameters
 
-  survid = paste(
+  survid <- paste(
     country, year, survey, paste0("v", vermast),
     "M", paste0("v", veralt), "A", "GMD", sep = "_"
   )
