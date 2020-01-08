@@ -1,19 +1,26 @@
-#' Title
+#' Convert dta GMD files to R binary files
 #'
-#' @param country
-#' @param year
-#' @param survey
-#' @param vermast
-#' @param veralt
-#' @param type
-#' @param maindir
-#' @param drive
+#' Pending: add option to check if the file already exists, so it is skipped
+#' Pending: add conditions if user select name of survey
+#' pending: check that paramters `year` or `survey` can only be specified if
+#' parameter `country` is also specified.
 #'
-#' @return
+#' @param country character: list of country iso3 code (accepts multiple) or
+#' `all`.
+#' @param year numeric:  list of years.
+#' @param survey charecter: In case there are more than one surveys for the same year
+#' @param vermast numeric: Master version. Default is the latest version
+#' @param veralt numeric: Alternative version. Default is the latest version
+#' @param type character: Collection. Default is GPWG
+#' @param maindir character: Main directory where data is stored
+#' @param drive character: Drive letter when data is stored. Default is P
+#'
+#' @return A dataframe with two columns, one for the id of the survey and one for the status
+#' of the saving procedure.
 #' @export
 #'
 #' @examples
-#' tm_dta2R()
+#' e <- tm_dta2R(country = "PRY", year = c(2013, 2014))
 tm_dta2R <- function(country = NA,
                      year = NULL,
                      survey = NA,

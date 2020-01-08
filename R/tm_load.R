@@ -24,6 +24,7 @@ tm_load <- function(country,
                     survey = NA,
                     vermast = NA,
                     veralt = NA,
+                    formt = "dta",
                     type = "PX",
                     maindir = ":/03.ProjectX/data/",
                     drive = "p") {
@@ -145,11 +146,27 @@ tm_load <- function(country,
   module <- "PX"
   filename <- paste(survid, module, sep = "_")
 
-  dtadir <- paste(dir_cys, survid, "Data", paste0(filename, ".dta"), sep = "/")
 
   cat("Loading ", filename, "\n")
 
-  tb <- haven::read_dta(dtadir)
+  datadir <- paste(dir_cys, survid, "Data", paste0(filename, ".", formt), sep = "/")
+  if (formt == "dta") {
+
+    tb <- haven::read_dta(datadir)
+
+  } else if (formt == "feather") {
+
+    tb <- feather::read_feather(datadir)
+
+  } else if (formt == "RData") {
+
+    load(datadir)
+
+  } else if (formt == "RData") {
+    tb <- readRDS(datadir)
+  } else {
+    print(paste0("format ", formt, " is not supported"))
+  }
 
   attr(tb, "filename") <- filename
   attr(tb, "survid") <- survid

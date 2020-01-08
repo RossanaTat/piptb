@@ -11,7 +11,7 @@ tm_build(
   vermast = NA,
   veralt = NA,
   type = "PX",
-  maindir = ":/03.ProjectX/data",
+  maindir = ":/03.ProjectX/data/",
   drive = "p"
 )
 }
