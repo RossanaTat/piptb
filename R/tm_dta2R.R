@@ -1,4 +1,18 @@
-
+#' Title
+#'
+#' @param country
+#' @param year
+#' @param survey
+#' @param vermast
+#' @param veralt
+#' @param type
+#' @param maindir
+#' @param drive
+#'
+#' @return
+#' @export
+#'
+#' @examples
 tm_dta2R <- function(country = NA,
                      year = NULL,
                      survey = NA,
@@ -82,20 +96,20 @@ tm_dta2R_save <- function(x) {
       save(tb, file = paste0(y, ".RData"))
       saveRDS(tb, paste0(y, ".Rds"))
 
-      output <- tibble::tibble(id = id1,
+      output <- tibble::tibble(id = survid,
                                status = "OK")
       return(output)
 
     }, # end of expr section
 
     error = function(e) {
-      output <- tibble::tibble(id = id1,
+      output <- tibble::tibble(id = survid,
                                status = paste("Error:",e$message))
       return(output)
     }, # end of error section
 
     warning = function(w) {
-      output <- tibble::tibble(id = id1,
+      output <- tibble::tibble(id = survid,
                                status = "OK")
       return(output)
     }, # end of warning section
