@@ -27,7 +27,7 @@ tm_build_DT <- function(countries,
 
   if (!(is.na(savename))) {
 
-    fname <- paste0(drive, "/", maindir, "/", "_aux/WLD/", savename)
+    fname <- paste0(drive, maindir, "/", "_aux/WLD/", savename)
 
     feather::write_feather(te, paste0(fname, ".feather"))
     save(te, file = paste0(fname, ".RData"))
