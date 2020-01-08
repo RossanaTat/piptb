@@ -13,14 +13,15 @@
 #' @export
 #'
 #' @examples
+#' tm_dta2R()
 tm_dta2R <- function(country = NA,
                      year = NULL,
                      survey = NA,
                      vermast = NA,
                      veralt = NA,
-                     type = "PX",
-                    maindir = ":/03.ProjectX/data/",
-                    drive = "p") {
+                     module = "PX",
+                     maindir = ":/03.ProjectX/data/",
+                     drive = "p") {
 
 
   #--------- Initial conditions
@@ -38,7 +39,7 @@ tm_dta2R <- function(country = NA,
     stop(st_msg)
   }
 
-  pattern <- "\\.dta$"
+  pattern <- paste0(module, "\\.dta$")
 
   if (!(is.na(country))) {
     maindir <- paste(maindir, country, sep = "/")
@@ -57,6 +58,8 @@ tm_dta2R <- function(country = NA,
                   full.names = TRUE)
 
   fr <- purrr::map_df(a, tm_dta2R_save)
+
+  print("Done with everything.")
 
   return(fr)
 
