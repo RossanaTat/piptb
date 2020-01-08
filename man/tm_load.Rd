@@ -10,6 +10,7 @@ tm_load(
   survey = NA,
   vermast = NA,
   veralt = NA,
+  formt = "dta",
   type = "PX",
   maindir = ":/03.ProjectX/data/",
   drive = "p"

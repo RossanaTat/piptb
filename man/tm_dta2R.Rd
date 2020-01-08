@@ -44,6 +44,5 @@ pending: check that paramters `year` or `survey` can only be specified if
 parameter `country` is also specified.
 }
 \examples{
-d <- tm_dta2R()
 e <- tm_dta2R(country = "PRY", year = c(2013, 2014))
 }

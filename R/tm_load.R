@@ -26,7 +26,7 @@ tm_load <- function(country,
                     veralt = NA,
                     formt = "dta",
                     type = "PX",
-                    maindir = ":/03.ProjectX/data/",
+                    maindir = ":/03.ProjectX/data",
                     drive = "p") {
 
 
@@ -46,7 +46,7 @@ tm_load <- function(country,
   }
 
   # Country dir
-  dir_c <- paste0(maindir, country)
+  dir_c <- paste0(maindir, "/", country)
   direxists <- dir.exists(dir_c)
 
   if (!direxists) {
@@ -162,7 +162,7 @@ tm_load <- function(country,
 
     load(datadir)
 
-  } else if (formt == "RData") {
+  } else if (formt == "Rds") {
     tb <- readRDS(datadir)
   } else {
     print(paste0("format ", formt, " is not supported"))

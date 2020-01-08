@@ -16,46 +16,72 @@
 #'
 #' @examples
 #' df <- tm_build(country = "COL", year = 2015)
-tm_build <- function(country = NA,
+tm_build <- function(country = NULL,
                      year = NA,
                      survey = NA,
                      vermast = NA,
                      veralt = NA,
+                     formt = "dta",
                      type = "PX",
-                     maindir = ":/03.ProjectX/data/",
+                     maindir = ":/03.ProjectX/data",
                      drive = "p") {
 
+
   # check country is provided
-  assert_that(length(country) > 0 & any(!(is.na(country))) ,
-              msg = "Please submit at least ONE country")
+  if(length(country) == 0){
+    stop("Please submit at least ONE country")
+  }
+
+  assert_that(any(!(is.na(country))) ,
+              msg = "No NA values are allowed in `country`")
+
+
+  # Main dir
+  wrkdir <- paste0(drive, maindir)
 
   #----------------------------------------------------------
-  # when country's length == 1
+  #   Create special vectors
   #----------------------------------------------------------
 
-  if (length(country) == 1) {
+  # available countries
+  av_country <- list.dirs(path = wrkdir, recursive = FALSE, full.names = FALSE)
+  av_country <- av_country[!(grepl(pattern = "^_", av_country))] # remove folders starting with _
 
-    svar <- c(year,
-              survey,
-              vermast,
-              veralt,
-              type,
-              maindir,
-              drive)
 
-    ones <- purrr::map_int(svar, length)
-    if (all(ones == 1)) {
-      to_load <- as.list(expand.grid(country = country  ,
-                                     year    = year     ,
-                                     survey  = survey   ,
-                                     vermast = vermast  ,
-                                     veralt  = veralt   ,
-                                     type    = type     ,
-                                     maindir = maindir  ,
-                                     drive   = drive
-                                 ))
-    } # end of all() condition
-  } else { # end of length(country) == 1 condition
+  # All countries
+  if (any(toupper(country) == "ALL")) {
+      country <- av_country
+  }
+
+  # check all countries are available
+  co_in_avco <- !(country  %in% av_country)
+  if (any(co_in_avco)) {
+    no_country <- paste(as.character(country[co_in_avco]), collapse  = ", ")
+    stop("The following country codes are not available:\n", no_country)
+  }
+
+  # select years for countries selected when is.na(year) == TRUE
+
+  if (any(is.na(year))) {
+    countries <- unique(country)
+
+    # year and country dataframe
+    ycdf <- purrr::map(countries, tm_get_year) %>%
+      purrr::map2(countries, ~data.frame(year = .x,
+                                         country = .y,
+                                         stringsAsFactors = FALSE)) %>%
+      data.table::rbindlist()
+
+    # redefine year and country
+    year <- ycdf[["year"]]
+    country <- ycdf[["country"]]
+
+  }
+
+
+
+#--------- create list with parameters and independent vectors
+
     to_load <- list(country = country  ,
                        year    = year     ,
                        survey  = survey   ,
@@ -65,14 +91,13 @@ tm_build <- function(country = NA,
                        maindir = maindir  ,
                        drive   = drive
                        )
-  } # end of length(country) != 1
 
   #----------------------------------------------------------
   # Check inputs
   #----------------------------------------------------------
 
   # get independnet vectors
-  # here, the original vectors are modifies to make of the same length
+  # here, the original vectors are modified to have the same length
 
   tm_check_inputs(lt = to_load)
 
@@ -114,10 +139,10 @@ tm_build <- function(country = NA,
   #----------------------------------------------------------
 
 
-  lt <- purrr::pmap(to_load, tm_load)
+  lt <- purrr::pmap(to_load, tm_load, formt = formt)
 
   # get names for list
-  nn <- purrr::map_chr(seq_along(lt), ~attributes(lt[[.x]])$id1)
+  nn <- purrr::map_chr(seq_along(lt), ~attributes(lt[[.x]])$survid)
   lt <- setNames(lt, nn)
 
   return(lt)
