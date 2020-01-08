@@ -42,7 +42,7 @@ tm_dta2R <- function(country = NA,
                   recursive = TRUE,
                   full.names = TRUE)
 
-  fr <- purrr::map(a, tm_dta2R_save)
+  fr <- purrr::map_df(a, tm_dta2R_save)
 
   return(fr)
 
@@ -98,7 +98,10 @@ tm_dta2R_save <- function(x) {
       output <- tibble::tibble(id = id1,
                                status = "OK")
       return(output)
-    } # end of warning section
+    }, # end of warning section
+    finally = {
+      print(paste("done with", survid))
+    }
 
   ) # End of trycatch
 
