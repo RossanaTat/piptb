@@ -22,8 +22,18 @@ tm_build_DT <- function(countries,
 
   te <- tm_build(country = countries, year = years, default = default)
 
+
+  varnames <- names(te[[1]]) # variable names
+  vattr <- purrr::map_chr(varnames, ~class(te[[1]][[.x]])) # variable attributes
+
   for (i in seq_along(te)) {
+    # create variables with survey id info
     te[[i]]$surveyid <- names(te)[[i]]
+
+    # assign the same attributes of list 1 to the rest of the lists
+    for (j in seq_along(varnames)) {
+      te[[i]][[varnames[[j]]]] <- vattr[[j]]
+    }
   }
 
   te <- data.table::rbindlist(te, use.names=TRUE , fill=TRUE)
@@ -39,5 +49,4 @@ tm_build_DT <- function(countries,
 
   return(te)
 }
-
 
