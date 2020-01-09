@@ -32,7 +32,9 @@ tm_build_DT <- function(countries,
 
     # assign the same attributes of list 1 to the rest of the lists
     for (j in seq_along(varnames)) {
-      te[[i]][[varnames[[j]]]] <- vattr[[j]]
+      if (varnames[[j]]  %in% names(te[[i]])) {
+        class(te[[i]][[varnames[[j]]]]) <- vattr[[j]]
+      }
     }
   }
 
