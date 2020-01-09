@@ -15,11 +15,12 @@ tm_build_DT <- function(countries,
                          years = NA,
                          maindir = ":/03.ProjectX/data",
                          drive = "p",
-                        savename = NA) {
+                         savename = NA,
+                         default = TRUE) {
 
 
 
-  te <- tm_build(country = countries, year = years)
+  te <- tm_build(country = countries, year = years, default = default)
 
   for (i in seq_along(te)) {
     te[[i]]$surveyid <- names(te)[[i]]

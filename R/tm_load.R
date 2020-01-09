@@ -27,7 +27,8 @@ tm_load <- function(country,
                     formt = "dta",
                     type = "PX",
                     maindir = ":/03.ProjectX/data",
-                    drive = "p") {
+                    drive = "p",
+                    default = FALSE) {
 
 
   #--------- Initial conditions
@@ -75,11 +76,37 @@ tm_load <- function(country,
     surveys <- stringr::str_subset(surveys, p)
     surveys <- stringr::str_replace(surveys, p, "\\3")
 
-    if (length(surveys) == 1) {
+    #--------- Conditions for zero, one, or multiple surveys for the same year
+
+    if (length(surveys) == 0) {
+      # if there is no survey for country and year.
+      minid <- paste0(country, "_", year)
+      tb <- tibble::tibble(id = minid,
+                           status = paste("Error: no survey available for", minid))
+      attr(tb, "filename") <- NA
+      attr(tb, "survid") <- minid
+      attr(tb, "module") <- type
+      attr(tb, "id1") <- minid
+      attr(tb, "id2") <- NA
+      return(tb)
+
+    } else if (length(surveys) == 1) {
+      # unique survey available
       survey <- surveys[[1]]
     } else {
-      a <- utils::menu(surveys, title = "Select a survey to load")
-      survey <- surveys[[a]]
+      # multiple survey available
+      if (default == TRUE) {
+
+        if ("EPHC-S2"  %in% surveys) {  # Argentina
+          survey <- surveys[surveys  %in%  "EPHC-S2"]
+        }
+        if ("EU-SILC"  %in% surveys) {  # EU-SILC
+          survey <- surveys[surveys  %in%  "EU-SILC"]
+        }
+      } else {
+        a <- utils::menu(surveys, title = "Select a survey to load")
+        survey <- surveys[[a]]
+      }
     }
   }  # end survey condition
 

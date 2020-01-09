@@ -24,7 +24,8 @@ tm_build <- function(country = NULL,
                      formt = "dta",
                      type = "PX",
                      maindir = ":/03.ProjectX/data",
-                     drive = "p") {
+                     drive = "p",
+                     default = FALSE) {
 
 
   # check country is provided
@@ -139,7 +140,7 @@ tm_build <- function(country = NULL,
   #----------------------------------------------------------
 
 
-  lt <- purrr::pmap(to_load, tm_load, formt = formt)
+  lt <- purrr::pmap(to_load, tm_load, formt = formt, default = default)
 
   # get names for list
   nn <- purrr::map_chr(seq_along(lt), ~attributes(lt[[.x]])$survid)
