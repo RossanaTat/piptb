@@ -150,31 +150,56 @@ tm_load <- function(country,
   cat("Loading ", filename, "\n")
 
   datadir <- paste(dir_cys, survid, "Data", paste0(filename, ".", formt), sep = "/")
-  if (formt == "dta") {
 
-    tb <- haven::read_dta(datadir)
 
-  } else if (formt == "feather") {
+  tryCatch(
+    expr = {
+      # Your code...
+      if (formt == "dta") {
 
-    tb <- feather::read_feather(datadir)
+        tb <- haven::read_dta(datadir)
 
-  } else if (formt == "RData") {
+      } else if (formt == "feather") {
 
-    load(datadir)
+        tb <- feather::read_feather(datadir)
 
-  } else if (formt == "Rds") {
-    tb <- readRDS(datadir)
-  } else {
-    print(paste0("format ", formt, " is not supported"))
-  }
+      } else if (formt == "RData") {
 
-  attr(tb, "filename") <- filename
-  attr(tb, "survid") <- survid
-  attr(tb, "module") <- module
-  attr(tb, "id1") <- id1
-  attr(tb, "id2") <- id2
+        load(datadir)
 
-  return(tb)
+      } else if (formt == "Rds") {
+        tb <- readRDS(datadir)
+      } else {
+        print(paste0("format ", formt, " is not supported"))
+      }
+      attr(tb, "filename") <- filename
+      attr(tb, "survid") <- survid
+      attr(tb, "module") <- module
+      attr(tb, "id1") <- id1
+      attr(tb, "id2") <- id2
+
+      tb$status <- "OK"
+
+      return(tb)
+    }, # end of expr section
+
+    error = function(e) {
+      tb <- tibble::tibble(id = survid,
+                           status = paste("Error:",e$message))
+      attr(tb, "filename") <- filename
+      attr(tb, "survid") <- survid
+      attr(tb, "module") <- module
+      attr(tb, "id1") <- id1
+      attr(tb, "id2") <- id2
+      return(tb)
+    }, # end of warning section
+
+    finally = {
+
+      print(paste("done with", survid))
+    } # end of finally section
+
+  ) # End of trycatch
 
 } # end of pcn_load()
 

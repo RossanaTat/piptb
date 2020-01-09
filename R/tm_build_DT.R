@@ -1,5 +1,7 @@
 #' Build a data.table with all the countries or  the countries selected
 #'
+#' Pending: create trycatch
+#'
 #' @param countries
 #' @param years
 #' @param maindir
@@ -23,7 +25,7 @@ tm_build_DT <- function(countries,
     te[[i]]$surveyid <- names(te)[[i]]
   }
 
-  te <- data.table::rbindlist(te, use.names=TRUE)
+  te <- data.table::rbindlist(te, use.names=TRUE , fill=TRUE)
 
   if (!(is.na(savename))) {
 
