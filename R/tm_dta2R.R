@@ -94,6 +94,7 @@ tm_dta2R_save <- function(x) {
 
 
       tb <- haven::read_dta(x)
+      tb <- data.table::as.data.table(tb)
 
       attr(tb, "filename") <- filename
       attr(tb, "survid") <- survid
