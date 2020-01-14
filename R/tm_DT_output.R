@@ -14,25 +14,40 @@
 #' @export
 #'
 #' @examples
-#' DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
-#'                    years = c(2012, 2014, 2012, 2014),
-#'                    povlines = c(1.9, 3.2),
-#'                    calc_vars = c("welfare_ppp", "pov_status"))
+#' (DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
+#'                     years = c(2012, 2014, 2012, 2014),
+#'                     povlines = c(1.9, 3.2),
+#'                     calc_vars = c("welfare_ppp", "pov_status")))
 #'
-#' DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
-#'                    years = c(2012, 2012, 2014, 2014),
-#'                    colvar = "urban",
-#'                    rowvar = "male",
-#'                    povlines = c(1.9, 3.2),
-#'                    calc_vars = c("welfare_ppp", "pov_status"))
+#' (DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
+#'                     years = c(2012, 2012, 2014, 2014),
+#'                     colvar = "urban",
+#'                     rowvar = "male",
+#'                     povlines = c(1.9, 3.2),
+#'                     calc_vars = c("welfare_ppp", "pov_status")))
 #'
-#' DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
-#'                    years = c(2012, 2012, 2014, 2014),
-#'                    colvar = "urban",
-#'                    rowvar = "male",
-#'                    super_colvar = "hsize",
-#'                    povlines = c(1.9, 3.2),
-#'                    calc_vars = c("welfare_ppp", "pov_status"))
+#' (DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
+#'                     years = c(2012, 2012, 2014, 2014),
+#'                     colvar = "urban",
+#'                     rowvar = "male",
+#'                     super_colvar = "hsize",
+#'                     povlines = c(1.9, 3.2),
+#'                     calc_vars = c("welfare_ppp", "pov_status")))
+#'
+#' (DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
+#'                     years = c(2012, 2014, 2012, 2014),
+#'                     povlines = c(1.9, 3.2),
+#'                     calc_vars = c("welfare_ppp", "pov_status"),
+#'                     stats = c("sum", "mean")))
+#'
+#' (DT <- tm_DT_output(countries = c("HND","HND", "PRY", "PRY"),
+#'                     years = c(2012, 2012, 2014, 2014),
+#'                     colvar = "urban",
+#'                     rowvar = "male",
+#'                     super_colvar = "hsize",
+#'                     povlines = c(1.9, 3.2),
+#'                     calc_vars = c("welfare_ppp", "pov_status"),
+#'                     stats = c("sum", "mean")))
 tm_DT_output <- function(countries,
                          years        = NA  ,
                          povlines     = 1.9 ,
