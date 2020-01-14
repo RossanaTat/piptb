@@ -104,17 +104,21 @@ tm_DT_output <- function(countries,
   #--------- Lines of estimation
 
   stats_text <- NULL
+  stats_ord <- NULL
   for (i in seq_along(stats)) {
     if (stats[i] == "mean") {
       stats_text <- paste("lapply(.SD, weighted.mean, w = weight , na.rm = TRUE)",
                           stats_text, sep = ",")
+      stats_ord <- c(stats[i], stats_ord)
     }
     if (stats[i] == "sum") {
       stats_text <- paste("lapply(.SD, weighted.sum, w = weight, na.rm = TRUE)",
                           stats_text, sep = ",")
+      stats_ord <- c(stats[i], stats_ord)
     }
     if (stats[i] == "max") {
       stats_text <- paste("lapply(.SD, max, na.rm = TRUE)", stats_text, sep = ",")
+      stats_ord <- c(stats[i], stats_ord)
     }
 
   }
@@ -126,18 +130,26 @@ tm_DT_output <- function(countries,
   # calculation variables pattern
   cv <- paste(as.character(calc_vars), collapse  = "|")
 
-  # DT <- DT[, lapply(.SD, weighted.mean, na.rm = TRUE),
-  #    .SDcols = patterns(cv),
-  #    keyby = eval(keyby_text)]
   DT <- DT[, eval(stats_text),
      .SDcols = patterns(cv),
      keyby = eval(keyby_text)]
 
-  # if variables besides surveyid are used in by
+
+  #--------- Format output
+
+
+  # if there are variables besides surveyid are used in by
   if (nk > 1) {
     data.table::setnames(DT, 2:nk, new_names)
   }
 
+  # include stats name in variable output
+  a <- expand.grid(x = calc_vars, y = stats_ord, stringsAsFactors = FALSE)
+  new_calc_var <- paste0(a$x, "(", a$y, ")" )
+
+  data.table::setnames(DT,  make.names(names = names(DT), unique=TRUE)) # make unique names
+  data.table::setnames(DT, grep(cv, names(DT), value = TRUE),
+                       new_calc_var)
 
   return(DT)
 }
