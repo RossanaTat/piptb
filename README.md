@@ -3,7 +3,7 @@
 
 # tablemaker
 
-### This README.md is justa place holder... it does reflect the real progress of the project. 
+### This README.md is just a placeholder... it does reflect the real progress of the project. 
 
 <!-- badges: start -->
 
