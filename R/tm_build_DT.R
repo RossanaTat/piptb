@@ -11,6 +11,8 @@
 #' @export
 #'
 #' @examples
+#' DT <- tm_build_DT(countries = c("HND","HND", "PRY", "PRY"),
+#'                    years = c(2012, 2012, 2014, 2014))
 tm_build_DT <- function(countries,
                          years = NA,
                          maindir = ":/03.ProjectX/data",
