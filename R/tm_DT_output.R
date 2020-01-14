@@ -43,6 +43,11 @@ tm_DT_output <- function(countries,
                          calc_vars    = "pov_status",
                          stats        = "mean") {
 
+  #----------------------------------------------------------
+  #   Load and prepare data
+  #----------------------------------------------------------
+
+
   # Load data
   DT <- tm_build_DT(countries = countries,
                  years = years)
@@ -73,7 +78,7 @@ tm_DT_output <- function(countries,
   new_names <- NULL
   nk <- 1    # counter. [1] == surveyid
 
-
+  # (Sction to softcode)
   if (length(colvar) == 1) {
     keyby_var <- paste0(keyby_var, ", get(colvar)")
     new_names <- c(new_names, substitute(colvar))
@@ -102,6 +107,7 @@ tm_DT_output <- function(countries,
 
 
   #--------- Lines of estimation
+  # (Sction to softcode)
 
   stats_text <- NULL
   stats_ord <- NULL
@@ -121,9 +127,19 @@ tm_DT_output <- function(countries,
       stats_ord <- c(stats[i], stats_ord)
     }
 
-  }
+    if (stats[i] == "min") {
+      stats_text <- paste("lapply(.SD, min, na.rm = TRUE)", stats_text, sep = ",")
+      stats_ord <- c(stats[i], stats_ord)
+    }
+
+  } # end of loop
   stats_text <- gsub("(.*),$" ,"\\1" ,stats_text)
   stats_text <- parse(text = paste0("c(",stats_text, ")"))
+
+
+  #----------------------------------------------------------
+  #   Parsing info to data.table an make calculations
+  #----------------------------------------------------------
 
   #--------- parse in Data Table
 
@@ -136,8 +152,6 @@ tm_DT_output <- function(countries,
 
 
   #--------- Format output
-
-
   # if there are variables besides surveyid are used in by
   if (nk > 1) {
     data.table::setnames(DT, 2:nk, new_names)
