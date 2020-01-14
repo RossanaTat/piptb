@@ -10,10 +10,11 @@ tm_load(
   survey = NA,
   vermast = NA,
   veralt = NA,
-  formt = "dta",
+  formt = "Rds",
   type = "PX",
-  maindir = ":/03.ProjectX/data/",
-  drive = "p"
+  maindir = ":/03.ProjectX/data",
+  drive = "p",
+  default = FALSE
 )
 }
 \arguments{

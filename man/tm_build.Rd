@@ -5,14 +5,16 @@
 \title{Builds list of data sets for calculations}
 \usage{
 tm_build(
-  country = NA,
+  country = NULL,
   year = NA,
   survey = NA,
   vermast = NA,
   veralt = NA,
+  formt = "Rds",
   type = "PX",
-  maindir = ":/03.ProjectX/data/",
-  drive = "p"
+  maindir = ":/03.ProjectX/data",
+  drive = "p",
+  default = FALSE
 )
 }
 \arguments{

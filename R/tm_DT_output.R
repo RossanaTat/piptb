@@ -34,14 +34,14 @@
 #'                    povlines = c(1.9, 3.2),
 #'                    calc_vars = c("welfare_ppp", "pov_status"))
 tm_DT_output <- function(countries,
-                               years        = NA  ,
-                               povlines     = 1.9 ,
-                               colvar       = NULL,
-                               rowvar       = NULL,
-                               super_rowvar = NULL,
-                               super_colvar = NULL,
-                               calc_vars    = "pov_status",
-                               stats        = "mean") {
+                         years        = NA  ,
+                         povlines     = 1.9 ,
+                         colvar       = NULL,
+                         rowvar       = NULL,
+                         super_rowvar = NULL,
+                         super_colvar = NULL,
+                         calc_vars    = "pov_status",
+                         stats        = "mean") {
 
 
   DT <- tm_build_DT(countries = countries,
@@ -55,7 +55,7 @@ tm_DT_output <- function(countries,
 
   svars  <- c(colvar, rowvar, super_colvar, super_rowvar, calc_vars_npov)
   fvars <- unique(c("weight", "welfare", "welfare_ppp",  "surveyid", svars))
-  DT <- DT[,..fvars]
+  DT <- DT[,eval(fvars)]
 
   # Poverty status
   for (i in povlines) {

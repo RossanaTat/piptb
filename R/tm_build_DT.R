@@ -9,6 +9,7 @@
 #'
 #' @return
 #' @export
+#' @import data.table
 #'
 #' @examples
 #' DT <- tm_build_DT(countries = c("HND","HND", "PRY", "PRY"),
