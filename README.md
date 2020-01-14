@@ -3,6 +3,8 @@
 
 # tablemaker
 
+### This README.md is justa place holder... it does reflect the real progress of the project. 
+
 <!-- badges: start -->
 
 <!-- badges: end -->
@@ -13,13 +15,13 @@ the UI Table Maker of Project X
 ## Installation
 
 You can install the released version of tablemaker from
-[CRAN](https://CRAN.R-project.org) with:
+[CRAN](https://CRAN.R-project.org) with **Not working yet**:
 
 ``` r
-install.packages("tablemaker")
+#install.packages("tablemaker")
 ```
 
-And the development version from [GitHub](https://github.com/) with:
+And the development version from [GitHub](https://github.com/) with **not ready yet**:
 
 ``` r
 # install.packages("devtools")
