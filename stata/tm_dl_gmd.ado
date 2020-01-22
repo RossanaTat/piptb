@@ -64,17 +64,172 @@ mata: P  = J(0,0, .z)   // matrix with information about each survey
 local i = 0
 while (`i' < `n') {
 	local ++i
-	local status     ""
-	local dlwnote  ""
 	
-	
-	mata: tm_ind(R)
-	
-	*--------------------2.2: Load data
-	local dwl_execute "datalibweb, country(`country') year(`year') surveyid(`survey') type(GMD) mod(GPWG) vermast(`vermast') veralt(`veralt') clear"
-	
-	cap `dwl_execute'
-	
+	cap {
+		local status     ""
+		local dlwnote  ""
+		
+		
+		mata: tm_ind(R)
+		
+		*--------------------2.2: Load data
+		local dwl_execute "datalibweb, country(`country') year(`year') surveyid(`survey') type(GMD) mod(GPWG) vermast(`vermast') veralt(`veralt') clear"
+		
+		cap `dwl_execute'
+		
+		if (_rc) {
+			local status "dlw error"
+			
+			local dlwnote "`dwl_execute'"
+			
+			mata: P = tm_info(P)
+			continue
+		}
+		
+		//========================================================
+		// Create characteristics
+		//========================================================
+		
+		*------Parameter of the file
+		
+		if regexm("`r(filename)'", "(.*)(\.dta)$") local filename = regexs(1)
+		
+		local filename  = regexr("`filename'", "([a-zA-Z]+)$", "PX")
+		
+		local dirname "`maindir'/`country'/`country'_`year'_`survey'"
+		local dirname "`dirname'/`survey_id'/Data"
+		
+		
+		
+		
+		char _dta[tm_datetimeHRF]    "`datetimeHRF'" 
+		char _dta[tm_datetime]       "`date_time'" 
+		char _dta[tm_user]           "`user'" 
+		char _dta[countrycode]       "`country'"
+		char _dta[year]              "`year'"
+		char _dta[survey]            "`survey'"
+		char _dta[orig_id]           "`survey_id'"
+		char _dta[projectX_id]       "`filename'"
+		
+		
+		//========================================================
+		// Keep vetted variables
+		//========================================================
+		
+		*----------1.1: clean weight variable
+		
+		cap confirm var weight, exact 
+		if (_rc) {
+			cap confirm var weight_p, exact 
+			if (_rc == 0) rename weight_p weight
+			else {
+				cap confirm var weight_h, exact 
+				if (_rc == 0) rename weight_h weight
+				else {
+					noi disp in red "no weight variable found for country(`country') year(`year') veralt(`veralt') "
+					continue
+				}
+			}
+		}
+		
+		
+		* make sure no information is lost
+		svyset, clear
+		recast double welfare
+		recast double weight    
+		
+		* monthly data
+		quietly replace welfare=welfare/365
+		sort welfare
+		
+		* drop missing values
+		quietly drop if welfare < 0 | welfare == .
+		quietly drop if weight <= 0 | weight == .
+		
+		order weight welfare
+		
+		//------------ variables in PPP
+		
+		cap gen double welfare_ppp = welfare/cpi2011/icp2011
+		if (_rc) {
+			noi disp in red "Error creating welfare_ppp in `survey_id'" _n ///
+			"Raw data: {stata `dwl_execute'}"
+			continue
+		}
+		pause after converting to ppp
+		
+		//------------ vetted variables
+		
+		local keepvars "welfare welfare_ppp weight subnatid subnatid2 subnatid3 age male urban hsize"
+		
+		
+		local ks ""
+		foreach k of local keepvars {
+			cap confirm variable `k', exact
+			if (_rc) gen `k' = . 
+		}
+		
+		keep `keepvars'
+		
+		
+		//========================================================
+		// replace file or save it
+		//========================================================
+		
+		* Confirm file exists
+		cap confirm file "`dirname'/`filename'.dta"
+		
+		if (_rc) {  // if file does not exist
+			
+			mata: st_local("direxists", strofreal(direxists("`dirname'")))
+			
+			if (`direxists' != 1) { // if folder does not exist
+				cap mkdir "`maindir'/`country'"
+				cap mkdir "`maindir'/`country'/`country'_`year'_`survey'"
+				cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'"
+				cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'/Data"
+			}
+			
+			datasignature set, reset saving("`dirname'/`filename'", replace)
+			
+			save "`dirname'/`filename'.dta"
+			local status "saved"
+		}
+		
+		else {  // If file exists, check data signature
+			cap noi datasignature confirm using "`dirname'/`filename'"
+			
+			if (_rc) { // if data do not match
+				if ("`replace'" != "") {
+					
+					cap mkdir "`dirname'/_vintage"
+					preserve   // I cannot use  copy because I nees the tm_datetime char
+					
+					use "`dirname'/`filename'.dta", clear
+					save "`dirname'/_vintage/`filename'_`:char _dta[tm_datetime]'", replace
+					
+					restore
+					
+					save "`dirname'/`filename'.dta", replace
+					local status "replaced"
+					noi disp in y "Data has been replaced"
+				}
+				
+				else { // if replace option not selected
+					noi disp in r "Data has not been replaced. Use uption {cmd:replace}"
+					local status "not replaced"
+				}
+			}
+			
+			else {  // if data is the same
+				local status "unchanged"
+			}
+			
+		}  //  end of file exists condition
+		
+		
+		mata: P = tm_info(P)
+	} // in case something else fails
 	if (_rc) {
 		local status "dlw error"
 		
@@ -83,150 +238,6 @@ while (`i' < `n') {
 		mata: P = tm_info(P)
 		continue
 	}
-	
-	//========================================================
-	// Create characteristics
-	//========================================================
-	
-	*------Parameter of the file
-	
-	if regexm("`r(filename)'", "(.*)(\.dta)$") local filename = regexs(1)
-	
-	local filename  = regexr("`filename'", "([a-zA-Z]+)$", "PX")
-	
-	local dirname "`maindir'/`country'/`country'_`year'_`survey'"
-	local dirname "`dirname'/`survey_id'/Data"
-	
-	
-	
-	
-	char _dta[tm_datetimeHRF]    "`datetimeHRF'" 
-	char _dta[tm_datetime]       "`date_time'" 
-	char _dta[tm_user]           "`user'" 
-	char _dta[countrycode]       "`country'"
-	char _dta[year]              "`year'"
-	char _dta[survey]            "`survey'"
-	char _dta[orig_id]           "`survey_id'"
-	char _dta[projectX_id]       "`filename'"
-	
-	
-	//========================================================
-	// Keep vetted variables
-	//========================================================
-	
-	*----------1.1: clean weight variable
-	
-	cap confirm var weight, exact 
-	if (_rc) {
-		cap confirm var weight_p, exact 
-		if (_rc == 0) rename weight_p weight
-		else {
-			cap confirm var weight_h, exact 
-			if (_rc == 0) rename weight_h weight
-			else {
-				noi disp in red "no weight variable found for country(`country') year(`year') veralt(`veralt') "
-				continue
-			}
-		}
-	}
-	
-	
-	* make sure no information is lost
-	svyset, clear
-	recast double welfare
-	recast double weight    
-	
-	* monthly data
-	quietly replace welfare=welfare/365
-	sort welfare
-	
-	* drop missing values
-	quietly drop if welfare < 0 | welfare == .
-	quietly drop if weight <= 0 | weight == .
-	
-	order weight welfare
-	
-	//------------ variables in PPP
-	
-	cap gen double welfare_ppp = welfare/cpi2011/icp2011
-	if (_rc) {
-		noi disp in red "Error creating welfare_ppp in `survey_id'" _n ///
-		"Raw data: {stata `dwl_execute'}"
-		continue
-	}
-	pause after converting to ppp
-	
-	//------------ vetted variables
-	
-	local keepvars "welfare welfare_ppp weight subnatid subnatid2 subnatid3 age male urban hsize cpi2011 icp2011"
-	
-	
-	local ks ""
-	foreach k of local keepvars {
-		cap confirm variable `k', exact
-		if (_rc) gen `k' = . 
-	}
-	
-	keep `keepvars'
-	
-	
-	//========================================================
-	// replace file or save it
-	//========================================================
-	
-	* Confirm file exists
-	cap confirm file "`dirname'/`filename'.dta"
-	
-  if (_rc) {  // if file does not exist
-		
-		mata: st_local("direxists", strofreal(direxists("`dirname'")))
-		
-		if (`direxists' != 1) { // if folder does not exist
-			cap mkdir "`maindir'/`country'"
-			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'"
-			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'"
-			cap mkdir "`maindir'/`country'/`country'_`year'_`survey'/`survey_id'/Data"
-		}
-		
-		datasignature set, reset saving("`dirname'/`filename'", replace)
-		
-		saveold "`dirname'/`filename'.dta"
-		local status "saved"
-	}
-	
-	else {  // If file exists, check data signature
-		cap noi datasignature confirm using "`dirname'/`filename'"
-		
-		if (_rc) { // if data do not match
-			if ("`replace'" != "") {
-				
-				cap mkdir "`dirname'/_vintage"
-				preserve   // I cannot use  copy because I nees the tm_datetime char
-				
-				use "`dirname'/`filename'.dta", clear
-				saveold "`dirname'/_vintage/`filename'_`:char _dta[tm_datetime]'", replace
-				
-				restore
-				
-				saveold "`dirname'/`filename'.dta", replace
-				local status "replaced"
-				noi disp in y "Data has been replaced"
-			}
-			
-			else { // if replace option not selected
-				noi disp in r "Data has not been replaced. Use uption {cmd:replace}"
-				local status "not replaced"
-			}
-		}
-		
-		else {  // if data is the same
-			local status "unchanged"
-		}
-		
-	}  //  end of file exists condition
-	
-	
-	mata: P = tm_info(P)
 	
 } // end of while 
 

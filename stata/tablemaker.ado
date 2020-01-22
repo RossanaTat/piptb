@@ -147,10 +147,18 @@ exit
 
 ><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><
 
+Examples:
+
+* download all GMD data
+tablemaker download, countries(all) replace
+
+
+
 Notes:
 1.
 2.
 3.
+
 
 
 Version Control:
