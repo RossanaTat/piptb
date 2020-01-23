@@ -107,7 +107,7 @@ tm_dta2R_save <- function(x) {
       #--------- Save files according to format select
 
       if (formt  %in% c("fst", "all")) {
-        fst::write_fst(tb, paste0(y, ".fst"))
+        fst::write_fst(tb, paste0(y, ".fst"), compress = 70)
       }
       if (formt  %in% c("feather", "all")) {
         feather::write_feather(tb, paste0(y, ".feather"))
