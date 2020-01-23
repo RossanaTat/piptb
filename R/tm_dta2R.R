@@ -65,7 +65,7 @@ tm_dta2R <- function(country = NA,
                   recursive = TRUE,
                   full.names = TRUE)
 
-  fr <- purrr::map_df(a, tm_dta2R_save)
+  fr <- purrr::map_df(a, tm_dta2R_save, formt = formt)
 
   print("Done with everything.")
 
@@ -78,7 +78,7 @@ tm_dta2R <- function(country = NA,
 #   individual function
 #----------------------------------------------------------
 
-tm_dta2R_save <- function(x) {
+tm_dta2R_save <- function(x, formt) {
 
   tryCatch(
     expr = {
