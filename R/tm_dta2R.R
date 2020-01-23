@@ -26,6 +26,7 @@ tm_dta2R <- function(country = NA,
                      survey = NA,
                      vermast = NA,
                      veralt = NA,
+                     formt = "all",
                      module = "PX",
                      maindir = ":/03.ProjectX/data/",
                      drive = "p") {
@@ -103,9 +104,20 @@ tm_dta2R_save <- function(x) {
       attr(tb, "id2") <- id2
 
 
-      feather::write_feather(tb, paste0(y, ".feather"))
-      save(tb, file = paste0(y, ".RData"))
-      saveRDS(tb, paste0(y, ".Rds"))
+      #--------- Save files according to format select
+
+      if (formt  %in% c("fst", "all")) {
+        fst::write_fst(tb, paste0(y, ".fst"))
+      }
+      if (formt  %in% c("feather", "all")) {
+        feather::write_feather(tb, paste0(y, ".feather"))
+      }
+      if (formt  %in% c("RData", "all")) {
+        save(tb, file = paste0(y, ".RData"))
+      }
+      if (formt  %in% c("Rds", "all")) {
+        saveRDS(tb, paste0(y, ".Rds"))
+      }
 
       output <- tibble::tibble(id = survid,
                                status = "OK")
