@@ -196,6 +196,8 @@ tm_load <- function(country,
 
       } else if (formt == "Rds") {
         tb <- readRDS(datadir)
+      } else if (formt == "fst") {
+        tb <- fst::read_fst(datadir, as.data.table = TRUE)
       } else {
         print(paste0("format ", formt, " is not supported"))
       }
