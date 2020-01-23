@@ -195,11 +195,17 @@ tm_load <- function(country,
         load(datadir)
 
       } else if (formt == "Rds") {
+
         tb <- readRDS(datadir)
+
       } else if (formt == "fst") {
+
         tb <- fst::read_fst(datadir, as.data.table = TRUE)
+
       } else {
+
         print(paste0("format ", formt, " is not supported"))
+
       }
       attr(tb, "filename") <- filename
       attr(tb, "survid") <- survid

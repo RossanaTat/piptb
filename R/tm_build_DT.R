@@ -18,12 +18,16 @@ tm_build_DT <- function(countries,
                          years = NA,
                          maindir = ":/03.ProjectX/data",
                          drive = "p",
+                         formt = "Rds",
                          savename = NA,
                          default = TRUE) {
 
 
 
-  te <- tm_build(country = countries, year = years, default = default)
+  te <- tm_build(country = countries,
+                 year = years,
+                 default = default,
+                 formt = formt)
 
 
   varnames <- names(te[[1]]) # variable names
