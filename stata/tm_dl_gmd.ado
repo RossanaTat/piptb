@@ -65,7 +65,7 @@ local i = 0
 while (`i' < `n') {
 	local ++i
 	
-	cap {
+	cap noi {
 		local status     ""
 		local dlwnote  ""
 		
