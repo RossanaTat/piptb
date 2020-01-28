@@ -48,8 +48,15 @@
 #'                     povlines = c(1.9, 3.2),
 #'                     calc_vars = c("welfare_ppp", "pov_status"),
 #'                     stats = c("sum", "mean")))
-tm_DT_output <- function(countries,
-                         years        = NA  ,
+#'
+#' DT <- tm_build_DT(countries = c("HND","HND", "PRY", "PRY"),
+#'                   years = c(2012, 2014, 2012, 2014))
+#' tm_DT_output(DT = DT,
+#'             povlines = c(1.9, 3.2),
+#'             calc_vars = c("welfare_ppp", "pov_status"))
+tm_DT_output <- function(countries    = NULL,
+                         years        = NULL,
+                         DT           = NULL,
                          povlines     = 1.9 ,
                          colvar       = NULL,
                          rowvar       = NULL,
@@ -64,8 +71,14 @@ tm_DT_output <- function(countries,
 
 
   # Load data
-  DT <- tm_build_DT(countries = countries,
+  if (length(countries) > 0) {
+    DT <- tm_build_DT(countries = countries,
                  years = years)
+  } else {
+    if (length(DT) == 0) {
+      stop("you must provide either a list of `countries` and `years` or a Data.Table `DT`")
+    }
+  }
 
   # Poverty status
   for (i in povlines) {
