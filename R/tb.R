@@ -13,7 +13,6 @@
 #' @return
 #' @export
 #'
-#' @import data.table
 #' @import collapse
 #'
 #' @examples
@@ -25,12 +24,16 @@ tb <- function(.data,
                scol    = NULL,
                srow    = NULL,
                by_vars = c(col, row, scol, srow),
-               stats   = c("mean", "sum", "min", "max")
+               stats   = c("mean", "sum", "min", "max", "mode", "median", "nth", "Nobs", "Ndistinct"),
+               format  = c("wide", "long")
                ) {
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Check inputs   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  stats  <- match.arg(stats, several.ok = TRUE)
+  format <- match.arg(format)
 
   check_input_tb(.data   = .data,
                  vars    = vars,
@@ -43,30 +46,78 @@ tb <- function(.data,
                  stats   = stats)
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  # process NSE or SE   ---------
+  # process parameters   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  # sdcols <- deparse(substitute(vars))
-  # sdcols <- match.call()
-  # sdcols <- as.character(quote(vars))sdcols
-  # sdcols
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## weights --------
 
-  # sdcols <- eval(substitute(alist(vars)))
-  # sdcols <- eval(substitute(vars))
-  # sdcols <- sapply(sdcols, deparse)
+  if (is.null(weight)) {
+    weights <- rep(1, nrow(df))
+  } else {
+    weights <- df[[weight]]
+  }
 
-  # get(sdcols)
-  # sdcols <- deparse(substitute(sdcols))
-  # sdcols <- deparse(substitute(eval(sdcols)))
-  # sdcols <- substitute(sdcols)
-  # sdcols
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## stats --------
 
-  # .data[, mean(get(vars))]
-  # .data[, lapply(.SD, mean, na.rm = TRUE),
-  #       .SDcols = vars]
-
-  collapv(.data, cols = vars, by = by_vars)
+  wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
+  rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
 
 
+  ws <- intersect(stats, wstats)
+  if (length(ws) > 0) {
+    wfs <- paste0("f", ws)
+  }
+
+
+  rs <- intersect(stats, rstats)
+  if (length(rs) > 0) {
+    rfs <- paste0("f", rs)
+  }
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # calculations using collapse   ---------
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  if (length(ws) > 0) {
+
+    wdt <- collapv(.data,
+                    cols   = vars,
+                    by     = by_vars,
+                    w      = weights,
+                    FUN    = wfs,
+                    return = format)
+  }
+
+  # Unweighted stats
+  if (length(rs) > 0) {
+
+    rdt <- collapv(.data,
+                    cols   = vars,
+                    by     = by_vars,
+                    FUN    = rfs,
+                    return = format)
+  }
+
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # bind   ---------
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  if (length(rs) > 0 && length(ws) > 0) {
+
+    dt <- data.table::rbindlist(list(wdt, rdt),
+                                use.names = TRUE,
+                                fill      = TRUE)
+  } else if (length(rs) == 0) {
+    dt <- wdt
+  } else {
+    dt <- rdt
+  }
+
+  return(dt)
 
 }
+
+
