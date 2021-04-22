@@ -1,6 +1,6 @@
 Package: tablemaker
 Title: Compute estimates for the Table Maker UI of Project X
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: 
     person(given = "R.Andres",
            family = "Castaneda",
