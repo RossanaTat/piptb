@@ -14,6 +14,7 @@
 #' @export
 #'
 #' @import collapse
+#' @import data.table
 #'
 #' @examples
 tb <- function(.data,
@@ -25,15 +26,15 @@ tb <- function(.data,
                srow    = NULL,
                by_vars = c(col, row, scol, srow),
                stats   = c("mean", "sum", "min", "max", "mode", "median", "nth", "Nobs", "Ndistinct"),
-               format  = c("wide", "long")
+               format  = c("long", "wide"),
+               povline = 1.9
                ) {
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Check inputs   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  stats  <- match.arg(stats, several.ok = TRUE)
-  format <- match.arg(format)
+
 
   check_input_tb(.data   = .data,
                  vars    = vars,
@@ -48,6 +49,20 @@ tb <- function(.data,
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # process parameters   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  stats  <- match.arg(stats, several.ok = TRUE)
+  format <- match.arg(format)
+
+  if (length(stats) == 1) {
+    format = "wide"
+  }
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## poverty lines --------
+
+  if ("pov_status" %in% vars) {
+
+  }
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## weights --------
@@ -80,6 +95,22 @@ tb <- function(.data,
                    return = format)
   })
 
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## format data --------
+  if (length(stats) == 1) {
+
+    setDT(dt)
+    dt[, estimate := (stats)]
+
+  } else {
+
+    setDT(dt)
+    setnames(dt, c("Function", "weights"), c("estimate", "population"))
+    dt[, estimate := gsub("^f", "", estimate)]
+
+  }
+
+  setcolorder(dt, c("estimate", by_vars))
 
   return(dt)
 

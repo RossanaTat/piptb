@@ -13,7 +13,8 @@ tb(
   scol = NULL,
   srow = NULL,
   by_vars = c(col, row, scol, srow),
-  stats = c("mean", "sum", "min", "max")
+  stats = c("mean", "sum", "min", "max", "mode", "median", "nth", "Nobs", "Ndistinct"),
+  format = c("long", "wide")
 )
 }
 \arguments{
