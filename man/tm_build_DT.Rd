@@ -9,6 +9,7 @@ tm_build_DT(
   years = NA,
   maindir = ":/03.ProjectX/data",
   drive = "p",
+  formt = "Rds",
   savename = NA,
   default = TRUE
 )
@@ -24,5 +25,5 @@ Pending: create trycatch
 }
 \examples{
 DT <- tm_build_DT(countries = c("HND","HND", "PRY", "PRY"),
-                   years = c(2012, 2012, 2014, 2014))
+                   years = c(2012, 2014, 2012, 2014))
 }

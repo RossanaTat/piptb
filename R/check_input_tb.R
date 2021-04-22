@@ -12,6 +12,9 @@ check_input_tb <- function(.data,
                             stats) {
 
   # check by vars are all nse or se
+
+  # check data is data.table
   return(invisible(TRUE))
+
 
 }

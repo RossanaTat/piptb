@@ -13,6 +13,9 @@
 #' @return
 #' @export
 #'
+#' @import data.table
+#' @import collapse
+#'
 #' @examples
 tb <- function(.data,
                vars,
@@ -39,6 +42,30 @@ tb <- function(.data,
                  by_vars = by_vars,
                  stats   = stats)
 
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # process NSE or SE   ---------
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # sdcols <- deparse(substitute(vars))
+  # sdcols <- match.call()
+  # sdcols <- as.character(quote(vars))sdcols
+  # sdcols
+
+  # sdcols <- eval(substitute(alist(vars)))
+  # sdcols <- eval(substitute(vars))
+  # sdcols <- sapply(sdcols, deparse)
+
+  # get(sdcols)
+  # sdcols <- deparse(substitute(sdcols))
+  # sdcols <- deparse(substitute(eval(sdcols)))
+  # sdcols <- substitute(sdcols)
+  # sdcols
+
+  # .data[, mean(get(vars))]
+  # .data[, lapply(.SD, mean, na.rm = TRUE),
+  #       .SDcols = vars]
+
+  collapv(.data, cols = vars, by = by_vars)
 
 
 

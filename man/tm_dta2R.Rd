@@ -10,6 +10,7 @@ tm_dta2R(
   survey = NA,
   vermast = NA,
   veralt = NA,
+  formt = "all",
   module = "PX",
   maindir = ":/03.ProjectX/data/",
   drive = "p"

@@ -10,29 +10,15 @@ Description: Load dta from datalibweb, tidy the data, and perform the calculatio
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1
 Depends: 
     R (>= 3.2.0)
 Imports: 
-    purrr,
-    stringr,
-    httr,
-    jsonlite,
-    readr,
-    tibble,
-    dplyr,
-    js,
-    tidyr,
-    ggthemes,
-    ggplot2,
     magrittr,
     data.table,
-    haven,
-    assertthat,
-    feather,
-    fst,
-    pipload
-Suggests: 
+    collapse
+Suggests:
+    pipload,
     testthat (>= 2.1.0)
 URL: https://github.com/randrescastaneda/tablemaker
 BugReports: https://github.com/randrescastaneda/tablemaker/issues
