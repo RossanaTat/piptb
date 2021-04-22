@@ -34,8 +34,6 @@ tb <- function(.data,
   # Check inputs   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
   check_input_tb(.data   = .data,
                  vars    = vars,
                  weight  = weight,
