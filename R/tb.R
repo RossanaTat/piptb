@@ -64,57 +64,22 @@ tb <- function(.data,
   wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
   rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
 
+  fs <- paste0("f", stats)
 
-  ws <- intersect(stats, wstats)
-  if (length(ws) > 0) {
-    wfs <- paste0("f", ws)
-  }
-
-
-  rs <- intersect(stats, rstats)
-  if (length(rs) > 0) {
-    rfs <- paste0("f", rs)
-  }
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # calculations using collapse   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  if (length(ws) > 0) {
+  suppressWarnings({
+    dt <- collapv(.data,
+                   cols   = vars,
+                   by     = by_vars,
+                   w      = weights,
+                   FUN    = fs,
+                   return = format)
+  })
 
-    wdt <- collapv(.data,
-                    cols   = vars,
-                    by     = by_vars,
-                    w      = weights,
-                    FUN    = wfs,
-                    return = format)
-  }
-
-  # Unweighted stats
-  if (length(rs) > 0) {
-
-    rdt <- collapv(.data,
-                    cols   = vars,
-                    by     = by_vars,
-                    FUN    = rfs,
-                    return = format)
-  }
-
-
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  # bind   ---------
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  if (length(rs) > 0 && length(ws) > 0) {
-
-    dt <- data.table::rbindlist(list(wdt, rdt),
-                                use.names = TRUE,
-                                fill      = TRUE)
-  } else if (length(rs) == 0) {
-    dt <- wdt
-  } else {
-    dt <- rdt
-  }
 
   return(dt)
 
