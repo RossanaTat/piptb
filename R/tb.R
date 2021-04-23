@@ -1,7 +1,8 @@
 #' Title
 #'
 #' @param .data dataframe with microdata information
-#' @param vars variables to analyze
+#' @param vars variables to analyze. If "pov_status" selected, estimates will be
+#'   done for poverty status for each value in `povline`
 #' @param weight sampling weight variable
 #' @param col column variable
 #' @param row row variables
@@ -9,6 +10,9 @@
 #' @param srow super row variable
 #' @param by_vars combination of `c(col, row, scol, srow)`
 #' @param stats Statistics to estimate
+#' @param format character: Either "long" or "wide". Default is "long"
+#' @param povline numeric: vector with poverty lines at daily 2011 ppp values.
+#'   Default is 1.9
 #'
 #' @return
 #' @export
@@ -60,15 +64,24 @@ tb <- function(.data,
 
   if ("pov_status" %in% vars) {
 
+    for (i in seq_along(povline)) {
+      name_var <- paste0("poor_", povline[i])
+      .data[, (name_var) := welfare_ppp < povline[i]]
+    }
+
+    poor_vars <- grep("^poor_", names(.data), value = TRUE)
+    vars <- vars[!(vars %in% "pov_status")]
+    vars <- c(vars, poor_vars)
+
   }
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## weights --------
 
   if (is.null(weight)) {
-    weights <- rep(1, nrow(df))
+    weights <- rep(1, nrow(.data))
   } else {
-    weights <- df[[weight]]
+    weights <- .data[[weight]]
   }
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
