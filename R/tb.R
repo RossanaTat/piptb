@@ -29,7 +29,7 @@ tb <- function(.data,
                scol    = NULL,
                srow    = NULL,
                by_vars = c(col, row, scol, srow),
-               stats   = c("mean", "sum", "min", "max", "mode", "median", "nth", "Nobs", "Ndistinct"),
+               stats   = "mean",
                format  = c("long", "wide"),
                povline = 1.9
                ) {
@@ -52,11 +52,31 @@ tb <- function(.data,
   # process parameters   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  stats  <- match.arg(stats, several.ok = TRUE)
+  stats  <-
+    match.arg(
+      stats,
+      c(
+        "mean",
+        "sum",
+        "min",
+        "max",
+        "mode",
+        "median",
+        "nth",
+        "Nobs",
+        "Ndistinct"
+      ),
+      several.ok = TRUE
+    )
+
   format <- match.arg(format)
 
   if (length(stats) == 1) {
     format = "wide"
+  }
+
+  if (is.null(by_vars)) {
+    by_vars <- 1
   }
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +86,7 @@ tb <- function(.data,
 
     for (i in seq_along(povline)) {
       name_var <- paste0("poor_", povline[i])
-      .data[, (name_var) := welfare_ppp < povline[i]]
+      .data[, (name_var) := as.numeric(welfare_ppp < povline[i]) ]
     }
 
     poor_vars <- grep("^poor_", names(.data), value = TRUE)
@@ -121,7 +141,11 @@ tb <- function(.data,
 
   }
 
-  setcolorder(dt, c("estimate", by_vars))
+  if (is.character(by_vars)) {
+    setcolorder(dt, c("estimate", by_vars))
+  } else {
+    setcolorder(dt, "estimate")
+  }
 
   return(dt)
 
