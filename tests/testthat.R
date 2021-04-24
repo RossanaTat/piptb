@@ -1,4 +1,4 @@
 library(testthat)
-library(tablemaker)
+library(piptb)
 
-test_check("tablemaker")
+test_check("piptb")

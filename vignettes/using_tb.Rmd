@@ -21,13 +21,17 @@ dt <- pipload::pip_load_cache("PRY", 2019, tool = "TB")
 
 ```{r basic}
 
-# Basic use
+# Basic use. mean default
+tb(dt,
+   vars = "welfare_ppp", 
+   weight = "weight")[]
+
+# Basic use. by area and gender
 tb(dt,
    vars = "welfare_ppp", 
    weight = "weight", 
    col   = "area", 
-   row   = "gender", 
-   stats = "mean")[]
+   row   = "gender")[]
 
 
 # Poverty status
@@ -35,9 +39,56 @@ tb(dt,
    vars = "pov_status", 
    weight = "weight", 
    col   = "area", 
-   row   = "gender", 
-   stats = "mean")[]
+   row   = "gender")[]
 
+
+# Poverty status and welfare
+tb(dt,
+   vars = c("pov_status", "welfare_ppp", "welfare_lcu"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender")[]
+
+
+
+
+# Poverty status and welfare, mean, sum,and max
+# sum for poor is the number of people
+tb(dt,
+   vars = c("pov_status", "welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   stats = c("mean", "sum", "max"))[]
+
+
+# Add more poverty lines
+tb(dt,
+   vars = c("pov_status", "welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   stats = c("mean", "sum"), 
+   povline = c(1.9, 3.2, 5.5))[]
+
+
+
+# add super column
+tb(dt,
+   vars = c("welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   scol  = "educat4")[]
+
+# add super row
+tb(dt,
+   vars = c("welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   scol  = "educat4",
+   srow  = "literacy")[]
 
 
 ```

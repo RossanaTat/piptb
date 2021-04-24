@@ -13,7 +13,7 @@ tb(
   scol = NULL,
   srow = NULL,
   by_vars = c(col, row, scol, srow),
-  stats = c("mean", "sum", "min", "max", "mode", "median", "nth", "Nobs", "Ndistinct"),
+  stats = "mean",
   format = c("long", "wide"),
   povline = 1.9
 )
@@ -21,7 +21,8 @@ tb(
 \arguments{
 \item{.data}{dataframe with microdata information}
 
-\item{vars}{variables to analyze}
+\item{vars}{variables to analyze. If "pov_status" selected, estimates will be
+done for poverty status for each value in `povline`}
 
 \item{weight}{sampling weight variable}
 
@@ -36,10 +37,21 @@ tb(
 \item{by_vars}{combination of `c(col, row, scol, srow)`}
 
 \item{stats}{Statistics to estimate}
+
+\item{format}{character: Either "long" or "wide". Default is "long"}
+
+\item{povline}{numeric: vector with poverty lines at daily 2011 ppp values.
+Default is 1.9}
 }
 \value{
 
 }
 \description{
 Title
+}
+\examples{
+dt <- pipload::pip_load_cache("PRY", 2019, tool = "TB")
+tb(dt,
+vars = "welfare_ppp",
+weight = "weight")[]
 }

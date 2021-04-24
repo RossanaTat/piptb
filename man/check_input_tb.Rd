@@ -9,7 +9,8 @@ check_input_tb(.data, vars, weight, col, row, scol, srow, by_vars, stats)
 \arguments{
 \item{.data}{dataframe with microdata information}
 
-\item{vars}{variables to analyze}
+\item{vars}{variables to analyze. If "pov_status" selected, estimates will be
+done for poverty status for each value in `povline`}
 
 \item{weight}{sampling weight variable}
 

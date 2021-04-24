@@ -1,4 +1,4 @@
-#' Title
+#' Table Baker: cross-tabulate statistics for PIP microdata
 #'
 #' @param .data dataframe with microdata information
 #' @param vars variables to analyze. If "pov_status" selected, estimates will be
@@ -21,6 +21,10 @@
 #' @import data.table
 #'
 #' @examples
+#' dt <- pipload::pip_load_cache("PRY", 2019, tool = "TB")
+#' tb(dt,
+#' vars = "welfare_ppp",
+#' weight = "weight")[]
 tb <- function(.data,
                vars,
                weight  = NULL,
