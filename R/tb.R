@@ -110,9 +110,8 @@ tb <- function(.data,
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## stats --------
-
-  wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
-  rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
+  # wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
+  # rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
 
   fs <- paste0("f", stats)
 

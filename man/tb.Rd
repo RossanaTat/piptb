@@ -2,7 +2,7 @@
 % Please edit documentation in R/tb.R
 \name{tb}
 \alias{tb}
-\title{Title}
+\title{Table Baker: cross-tabulate statistics for PIP microdata}
 \usage{
 tb(
   .data,
@@ -47,7 +47,7 @@ Default is 1.9}
 
 }
 \description{
-Title
+Table Baker: cross-tabulate statistics for PIP microdata
 }
 \examples{
 dt <- pipload::pip_load_cache("PRY", 2019, tool = "TB")
