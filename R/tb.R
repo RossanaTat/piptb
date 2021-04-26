@@ -27,15 +27,16 @@
 #' weight = "weight")[]
 tb <- function(.data,
                vars,
-               weight  = NULL,
-               col     = NULL,
-               row     = NULL,
-               scol    = NULL,
-               srow    = NULL,
-               by_vars = c(col, row, scol, srow),
-               stats   = "mean",
-               format  = c("long", "wide"),
-               povline = 1.9
+               weight     = NULL,
+               col        = NULL,
+               row        = NULL,
+               scol       = NULL,
+               srow       = NULL,
+               by_vars    = c(col, row, scol, srow),
+               stats      = "mean",
+               format     = c("long", "wide"),
+               povline    = 1.9,
+               by_survey  = FALSE
                ) {
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,9 +80,24 @@ tb <- function(.data,
     format = "wide"
   }
 
-  if (is.null(by_vars)) {
-    by_vars <- 1
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## By vars --------
+
+  if (!is.null(by_vars) && isTRUE(by_survey)) {
+
+    by_vars <- c("survey_id", by_vars)
+
+  } else if (is.null(by_vars) && isTRUE(by_survey)) {
+
+    by_vars <- "survey_id"
+
+  } else if (is.null(by_vars) && isFALSE(by_survey)) {
+
+      by_vars <- 1
+
   }
+
+
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## poverty lines --------
