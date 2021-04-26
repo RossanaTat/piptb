@@ -13,6 +13,8 @@
 #' @param format character: Either "long" or "wide". Default is "long"
 #' @param povline numeric: vector with poverty lines at daily 2011 ppp values.
 #'   Default is 1.9
+#' @param by_survey logical: If TRUE include variable "survey_id" as part of the
+#'   grouping variables.
 #'
 #' @return
 #' @export

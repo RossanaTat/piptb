@@ -15,7 +15,8 @@ tb(
   by_vars = c(col, row, scol, srow),
   stats = "mean",
   format = c("long", "wide"),
-  povline = 1.9
+  povline = 1.9,
+  by_survey = FALSE
 )
 }
 \arguments{
@@ -42,6 +43,9 @@ done for poverty status for each value in `povline`}
 
 \item{povline}{numeric: vector with poverty lines at daily 2011 ppp values.
 Default is 1.9}
+
+\item{by_survey}{logical: If TRUE include variable "survey_id" as part of the
+grouping variables.}
 }
 \value{
 
