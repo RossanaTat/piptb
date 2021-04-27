@@ -1,6 +1,6 @@
 Package: piptb
 Title: Compute estimates for the Table Maker UI of Project X
-Version: 0.0.1
+Version: 0.0.1.9000
 Authors@R: 
     person(given = "R.Andres",
            family = "Castaneda",
