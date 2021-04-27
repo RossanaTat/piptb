@@ -2,7 +2,8 @@
 #'
 #' @param .data dataframe with microdata information
 #' @param vars variables to analyze. If "pov_status" selected, estimates will be
-#'   done for poverty status for each value in `povline`
+#'   done for poverty status for each value in `povline` If NULL, size
+#'   population of population in each group is calculated
 #' @param weight sampling weight variable
 #' @param col column variable
 #' @param row row variables
@@ -28,7 +29,7 @@
 #' vars = "welfare_ppp",
 #' weight = "weight")[]
 tb <- function(.data,
-               vars,
+               vars       = NULL,
                weight     = NULL,
                col        = NULL,
                row        = NULL,
@@ -59,6 +60,16 @@ tb <- function(.data,
   # process parameters   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## vars --------
+  if (is.null(vars)) {
+    .data[, ones.. := 1]
+    vars <- "ones.."
+  }
+
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## stats --------
   stats  <-
     match.arg(
       stats,
@@ -75,6 +86,13 @@ tb <- function(.data,
       ),
       several.ok = TRUE
     )
+  # wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
+  # rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
+
+  fs <- paste0("f", stats)
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## format --------
 
   format <- match.arg(format)
 
@@ -121,18 +139,10 @@ tb <- function(.data,
   ## weights --------
 
   if (is.null(weight)) {
-    weights <- rep(1, nrow(.data))
+    population <- rep(1, nrow(.data))
   } else {
-    weights <- .data[[weight]]
+    population <- .data[[weight]]
   }
-
-  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ## stats --------
-  # wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
-  # rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
-
-  fs <- paste0("f", stats)
-
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # calculations using collapse   ---------
@@ -142,7 +152,7 @@ tb <- function(.data,
     dt <- collapv(.data,
                    cols   = vars,
                    by     = by_vars,
-                   w      = weights,
+                   w      = population,
                    FUN    = fs,
                    return = format)
   })
@@ -166,6 +176,11 @@ tb <- function(.data,
     setcolorder(dt, c("estimate", by_vars))
   } else {
     setcolorder(dt, "estimate")
+  }
+
+
+  if (vars == "ones..") {
+    dt[, ones..:= NULL]
   }
 
   return(dt)

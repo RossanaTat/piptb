@@ -90,5 +90,16 @@ tb(dt,
    scol  = "educat4",
    srow  = "literacy")[]
 
+# Size of population (vars = NULL)
+tb(dt,
+   # vars = "pov_status", 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   stats = "sum", 
+   by_survey = TRUE)[]
+
+
+
 
 ```
