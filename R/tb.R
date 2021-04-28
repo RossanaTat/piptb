@@ -117,8 +117,6 @@ tb <- function(.data,
 
   }
 
-
-
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## poverty lines --------
 
@@ -178,10 +176,24 @@ tb <- function(.data,
     setcolorder(dt, "estimate")
   }
 
-
   if ("ones.." %in% vars) {
     dt[, ones..:= NULL]
   }
+
+  ### change names of by variables ---------
+  args <- c("col", "row", "scol", "srow")
+
+  for (i in seq_along(args)) {
+
+    if (!is.null(get(args[i]))) {
+      nname <- paste0(args[i], ".", get(args[i]))
+
+      oname <- paste0(get(args[i]))
+      setnames(dt, oname, nname)
+    }
+  }
+
+
 
   return(dt)
 
