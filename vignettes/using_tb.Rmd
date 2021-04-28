@@ -219,17 +219,18 @@ tb(col,
 
 # Benchmarking
 
-Here we change to Paraguay databases just to showcase how to do calculations using lists and how to break the results if they come in one single data set
+This is the code to create the benchmarking. It is not executed in this vignette.
 
-```{r bench}
+```{r bench, eval=FALSE}
 
 # The whole process
-di <- pipload::pip_find_cache("PRY", tool = "TB")
+di <- pipload::pip_find_cache("COL", tool = "TB")
 
-fdt <- function(di) {
+fdl <- function(di) {
   dl <- pipload::pip_load_cache(cache_id = di, 
                                 type = "list", 
-                                verbose = FALSE)
+                                verbose = FALSE, 
+                                pipedir = "e:/PovcalNet/01.personal/wb384996/temp/R/")
   rl <- purrr::map(dl, ~{
     tb(.data = .x,
        vars = "welfare_ppp", 
@@ -241,19 +242,20 @@ fdt <- function(di) {
 }
 
 
-fdl <- function(di) {
+fdt <- function(di) {
   dt <- pipload::pip_load_cache(cache_id = di, 
-                                verbose = FALSE)
+                                verbose = FALSE, 
+                                pipedir = "e:/PovcalNet/01.personal/wb384996/temp/R/")
   rt <- tb(.data = dt,
            vars = "welfare_ppp", 
            weight = "weight", 
            col   = "area", 
            row   = "gender", 
-           stats = "mean", 
-           by_survey = TRUE)
+           stats = "mean")
   
   rt <- split(rt, rt[, "ID"])
 }
+
 
 bench <- microbenchmark::microbenchmark(
   times = 50,
@@ -279,14 +281,16 @@ if (requireNamespace("highcharter")) {
 }
 
 
-# loading data
+# loading 
 bench <- microbenchmark::microbenchmark(
   times = 50,
   a_load = pipload::pip_load_cache(cache_id = di, 
-                               verbose = FALSE),
+                               verbose = FALSE, 
+                               pipedir = "e:/PovcalNet/01.personal/wb384996/temp/R/"),
   b_load = pipload::pip_load_cache(cache_id = di, 
                                type = "list", 
-                               verbose = FALSE)
+                               verbose = FALSE, 
+                               pipedir = "e:/PovcalNet/01.personal/wb384996/temp/R/")
 )
 
 if (requireNamespace("highcharter")) {
@@ -308,11 +312,16 @@ if (requireNamespace("highcharter")) {
 
 # calculations
 
-dl <- pipload::pip_load_cache(cache_id = di, 
-                              type = "list", 
-                              verbose = FALSE)
-dt <- pipload::pip_load_cache(cache_id = di, 
-                            verbose = FALSE)
+# di <- pipload::pip_find_cache("COL", tool = "TB")
+
+dl <- pipload::pip_load_cache(cache_id = di,
+                                type = "list",
+                                verbose = FALSE, 
+                              pipedir = "e:/PovcalNet/01.personal/wb384996/temp/R/")
+
+dt <- pipload::pip_load_cache(cache_id = di,
+                              verbose = FALSE, 
+                              pipedir = "e:/PovcalNet/01.personal/wb384996/temp/R/")
 
 bench <- microbenchmark::microbenchmark(
   times = 50,
@@ -355,5 +364,7 @@ if (requireNamespace("highcharter")) {
 } else {
   boxplot(bench, outline = FALSE)
 }
+# pushoverr::pushover("Done with benchmarking")
+
 
 ```
