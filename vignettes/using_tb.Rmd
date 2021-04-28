@@ -16,9 +16,11 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(piptb)
-dt <- pipload::pip_load_cache("PRY", 2019, tool = "TB")
+dt <- pipload::pip_load_cache("PRY", year = 2019, tool = "TB")
 ```
 
+
+# Basic use
 ```{r basic}
 
 # Basic use. mean default
@@ -48,9 +50,6 @@ tb(dt,
    weight = "weight", 
    col   = "area", 
    row   = "gender")[]
-
-
-
 
 # Poverty status and welfare, mean, sum,and max
 # sum for poor is the number of people
@@ -99,7 +98,262 @@ tb(dt,
    stats = "sum", 
    by_survey = TRUE)[]
 
+```
 
 
+# BIG data
+
+```{r big-setup, cache=TRUE}
+col <- pipload::pip_load_cache("COL", tool = "TB")
+```
+
+Compilation of `r length(col[, unique(survey_id)])` surveys, with `r format(dim(col)[1], big.mark = ",")` observations.  Default options is `by_survey = TRUE`
+
+```{r big-cals}
+
+# Basic use. mean default
+system.time({
+   tb(col,
+      vars = "welfare_ppp", 
+      weight = "weight")
+})
+
+# Basic use. by area and gender
+system.time({
+   tb(col,
+      vars = "welfare_ppp", 
+      weight = "weight", 
+      col   = "area", 
+      row   = "gender")
+})
+
+
+# Poverty status
+system.time({
+   tb(col,
+      vars = "pov_status", 
+      weight = "weight", 
+      col   = "area", 
+      row   = "gender")
+})
+
+
+# Poverty status and welfare
+system.time({
+   
+tb(col,
+   vars = c("pov_status", "welfare_ppp", "welfare_lcu"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender")
+   
+})
+
+# Poverty status and welfare, mean, sum,and max
+# sum for poor is the number of people
+system.time({
+   
+tb(col,
+   vars = c("pov_status", "welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   stats = c("mean", "sum", "max"))
+})
+
+
+# Add more poverty lines
+system.time({
+   
+tb(col,
+   vars = c("pov_status", "welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   stats = c("mean", "sum"), 
+   povline = c(1.9, 3.2, 5.5))
+   
+})
+
+
+
+# add super column
+system.time({
+   
+tb(col,
+   vars = c("welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   scol  = "educat4")
+   
+})
+
+# add super row
+system.time({
+   
+tb(col,
+   vars = c("welfare_ppp"), 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   scol  = "educat4",
+   srow  = "literacy")
+   
+})
+
+# Size of population (vars = NULL)
+system.time({
+   
+tb(col,
+   # vars = "pov_status", 
+   weight = "weight", 
+   col   = "area", 
+   row   = "gender", 
+   stats = "sum", 
+   by_survey = TRUE)
+   
+})
+
+```
+
+# Benchmarking
+
+Here we change to Paraguay databases just to showcase how to do calculations using lists and how to break the results if they come in one single data set
+
+```{r bench}
+
+# The whole process
+di <- pipload::pip_find_cache("PRY", tool = "TB")
+
+fdt <- function(di) {
+  dl <- pipload::pip_load_cache(cache_id = di, 
+                                type = "list", 
+                                verbose = FALSE)
+  rl <- purrr::map(dl, ~{
+    tb(.data = .x,
+       vars = "welfare_ppp", 
+       weight = "weight", 
+       col   = "area", 
+       row   = "gender", 
+       stats = "mean")
+  })
+}
+
+
+fdl <- function(di) {
+  dt <- pipload::pip_load_cache(cache_id = di, 
+                                verbose = FALSE)
+  rt <- tb(.data = dt,
+           vars = "welfare_ppp", 
+           weight = "weight", 
+           col   = "area", 
+           row   = "gender", 
+           stats = "mean", 
+           by_survey = TRUE)
+  
+  rt <- split(rt, rt[, "survey_id"])
+}
+
+bench <- microbenchmark::microbenchmark(
+  times = 50,
+  a_all = fdt(di),
+  b_all = fdl(di)
+)
+
+if (requireNamespace("highcharter")) {
+  library(magrittr)
+  hc_dt <- highcharter::data_to_boxplot(bench,
+                                        time,
+                                        expr,
+                                        add_outliers = FALSE,
+                                        name = "Time in milliseconds")
+  
+  highcharter::highchart() %>%
+    highcharter::hc_xAxis(type = "category") %>%
+    highcharter::hc_chart(inverted=TRUE) %>% 
+    highcharter::hc_add_series_list(hc_dt)
+  
+} else {
+  boxplot(bench, outline = FALSE)
+}
+
+
+# loading data
+bench <- microbenchmark::microbenchmark(
+  times = 50,
+  a_load = pipload::pip_load_cache(cache_id = di, 
+                               verbose = FALSE),
+  b_load = pipload::pip_load_cache(cache_id = di, 
+                               type = "list", 
+                               verbose = FALSE)
+)
+
+if (requireNamespace("highcharter")) {
+  library(magrittr)
+  hc_dt <- highcharter::data_to_boxplot(bench,
+                                        time,
+                                        expr,
+                                        add_outliers = FALSE,
+                                        name = "Time in milliseconds")
+  
+  highcharter::highchart() %>%
+    highcharter::hc_xAxis(type = "category") %>%
+    highcharter::hc_chart(inverted=TRUE) %>% 
+    highcharter::hc_add_series_list(hc_dt)
+  
+} else {
+  boxplot(bench, outline = FALSE)
+}
+
+# calculations
+
+dl <- pipload::pip_load_cache(cache_id = di, 
+                              type = "list", 
+                              verbose = FALSE)
+dt <- pipload::pip_load_cache(cache_id = di, 
+                            verbose = FALSE)
+
+bench <- microbenchmark::microbenchmark(
+  times = 50,
+  a_calc = {
+    rt <- tb(.data = dt,
+             vars = "welfare_ppp", 
+             weight = "weight", 
+             col   = "area", 
+             row   = "gender", 
+             stats = "mean", 
+             by_survey = TRUE)
+    
+    rt <- split(rt, rt[, "survey_id"])
+  },
+  b_calc = {
+    rl <- purrr::map(dl, ~{
+    tb(.data = .x,
+       vars = "welfare_ppp", 
+       weight = "weight", 
+       col   = "area", 
+       row   = "gender", 
+       stats = "mean")
+  })
+  }
+)
+
+if (requireNamespace("highcharter")) {
+  library(magrittr)
+  hc_dt <- highcharter::data_to_boxplot(bench,
+                                        time,
+                                        expr,
+                                        add_outliers = FALSE,
+                                        name = "Time in milliseconds")
+  
+  highcharter::highchart() %>%
+    highcharter::hc_xAxis(type = "category") %>%
+    highcharter::hc_chart(inverted=TRUE) %>% 
+    highcharter::hc_add_series_list(hc_dt)
+  
+} else {
+  boxplot(bench, outline = FALSE)
+}
 
 ```
