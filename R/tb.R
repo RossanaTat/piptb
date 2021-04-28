@@ -14,8 +14,10 @@
 #' @param format character: Either "long" or "wide". Default is "long"
 #' @param povline numeric: vector with poverty lines at daily 2011 ppp values.
 #'   Default is 1.9
-#' @param by_survey logical: If TRUE include variable "survey_id" as part of the
+#' @param by_survey logical: If TRUE include variable "cache_id" as part of the
 #'   grouping variables.
+#' @param id_var characger: variable used to uniquely identify surveys. It could
+#'   be "cache_id" or "survey_id". Default is "cache_id".
 #'
 #' @return
 #' @export
@@ -39,7 +41,8 @@ tb <- function(.data,
                stats      = "mean",
                format     = c("long", "wide"),
                povline    = 1.9,
-               by_survey  = FALSE
+               by_survey  = getOption("by_survey.tb"),
+               id_var     = c("cache_id", "survey_id")
                ) {
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -86,8 +89,6 @@ tb <- function(.data,
       ),
       several.ok = TRUE
     )
-  wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
-  rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
 
   fs <- paste0("f", stats)
 
@@ -102,20 +103,22 @@ tb <- function(.data,
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## By vars --------
+  id_var <- match.arg(id_var)
 
   if (!is.null(by_vars) && isTRUE(by_survey)) {
 
-    by_vars <- c("survey_id", by_vars)
+    by_vars <- c(id_var, by_vars)
 
   } else if (is.null(by_vars) && isTRUE(by_survey)) {
 
-    by_vars <- "survey_id"
+    by_vars <- id_var
 
   } else if (is.null(by_vars) && isFALSE(by_survey)) {
 
       by_vars <- 1
 
   }
+
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## poverty lines --------
@@ -193,6 +196,10 @@ tb <- function(.data,
     }
   }
 
+  ## id variable
+  if (id_var %in% by_vars) {
+    setnames(dt, id_var, "ID")
+  }
 
 
   return(dt)
