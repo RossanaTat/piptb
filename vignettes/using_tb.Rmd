@@ -103,7 +103,7 @@ tb(dt,
 
 # BIG data
 
-```{r big-setup, cache=TRUE}
+```{r big-setup}
 col <- pipload::pip_load_cache("COL", tool = "TB")
 ```
 
@@ -252,7 +252,7 @@ fdl <- function(di) {
            stats = "mean", 
            by_survey = TRUE)
   
-  rt <- split(rt, rt[, "survey_id"])
+  rt <- split(rt, rt[, "ID"])
 }
 
 bench <- microbenchmark::microbenchmark(
@@ -325,7 +325,7 @@ bench <- microbenchmark::microbenchmark(
              stats = "mean", 
              by_survey = TRUE)
     
-    rt <- split(rt, rt[, "survey_id"])
+    rt <- split(rt, rt[, "ID"])
   },
   b_calc = {
     rl <- purrr::map(dl, ~{
