@@ -86,8 +86,8 @@ tb <- function(.data,
       ),
       several.ok = TRUE
     )
-  # wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
-  # rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
+  wstats <- c("mean", "sum", "median", "mode", "nth") # weighted stats
+  rstats <- c("min", "max", "Nobs", "Ndistinct")      # no weighted stats
 
   fs <- paste0("f", stats)
 
@@ -167,7 +167,7 @@ tb <- function(.data,
   } else {
 
     setDT(dt)
-    setnames(dt, c("Function", "weights"), c("estimate", "population"))
+    setnames(dt, "Function", "estimate")
     dt[, estimate := gsub("^f", "", estimate)]
 
   }
@@ -179,7 +179,7 @@ tb <- function(.data,
   }
 
 
-  if (vars == "ones..") {
+  if ("ones.." %in% vars) {
     dt[, ones..:= NULL]
   }
 
