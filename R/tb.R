@@ -48,21 +48,22 @@ tb <- function(.data,
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Check inputs   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  check_input_tb(.data   = .data,
-                 vars    = vars,
-                 weight  = weight,
-                 col     = col,
-                 row     = row,
-                 scol    = scol,
-                 srow    = srow,
-                 by_vars = by_vars,
-                 stats   = stats)
+#
+#   check_input_tb(.data   = .data,
+#                  vars    = vars,
+#                  weight  = weight,
+#                  col     = col,
+#                  row     = row,
+#                  scol    = scol,
+#                  srow    = srow,
+#                  by_vars = by_vars,
+#                  stats   = stats)
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # process parameters   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+  data.table::setDT(.data)
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## vars --------
   if (is.null(vars)) {
@@ -127,6 +128,8 @@ tb <- function(.data,
 
     for (i in seq_along(povline)) {
       name_var <- paste0("poor_", povline[i])
+
+      # .data[[name_var]] <- as.numeric(.data$welfare_ppp < povline[i])
       .data[, (name_var) := as.numeric(welfare_ppp < povline[i]) ]
     }
 
