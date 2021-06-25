@@ -1,10 +1,14 @@
 fake_load <- function(country, year) {
-  callf <- paste0('pipload::pip_load_cache(country = ' ,
-                 country,
-                 ', year = ', year,') ')
-  print(callf)
+
+  callf <- rlang::call2("pip_load_cache",
+               country = country,
+               year    = year,
+               .ns = "pipload")
+
+  callf
 }
-fake_load("COL", 2009)
+# qq <- fake_load("PRY", c(2007:2009))
+# df <- eval(qq)
 
 table_baker <- function(vars       = NULL,
                         weight     = NULL,
@@ -20,8 +24,7 @@ table_baker <- function(vars       = NULL,
                         id_var     = c("cache_id", "survey_id"),
                         ...) {
 
-  dots        <- match.call(expand.dots = FALSE)$...
-  dots        <- lapply(dots, deparse)
+  dots        <- list(...)
   dots_names  <- names(dots)
   y.countries <- grep("y\\.[a-zA-Z]{3}",
                       dots_names,
@@ -30,23 +33,16 @@ table_baker <- function(vars       = NULL,
 
   country_codes <- toupper(gsub("y\\.", "", y.countries))
 
-  # names(countries_values) <- country_codes
-
-  year_call <- vector(mode = "list",
-                      length = length(country_codes))
-
-  for (i in seq_along(country_codes)) {
-    year_call[[i]] <- countries_values[[i]]
-  }
-  purrr::pwalk(list(country = country_codes,
-                    year    = year_call),
-               fake_load)
+  purrr::pmap(list(country = country_codes,
+                   year    = countries_values),
+                   fake_load)
 }
 # debugonce(table_baker)
 dd <- table_baker(y.col = c(2010, 2012),
-                  y.pry = c(2006:2010),
+                  y.HND = c(2006:2010),
+                  y.pry = c(2006,2010),
                   x = c(4,5), y = 8, "ff")
-
+eval(dd[[3]])
 
 
 
