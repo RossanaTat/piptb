@@ -26,24 +26,23 @@ table_baker <- function(vars       = NULL,
                         id_var     = c("cache_id", "survey_id"),
                         ...) {
 
-  dots        <- list(...)
-  dots_names  <- names(dots)
-  y.countries <- grep("y\\.[a-zA-Z]{3}",
+  dots             <- list(...)
+  dots_names       <- names(dots)
+  country_codes    <- grep("^[A-Z]{3}",
                       dots_names,
                       value = TRUE)
-  countries_values <- dots[y.countries]
-
-  country_codes <- toupper(gsub("y\\.", "", y.countries))
+  countries_values <- dots[country_codes]
 
   purrr::pmap(list(country = country_codes,
                    year    = countries_values),
                    fake_load)
 }
 # debugonce(table_baker)
-# dd <- table_baker(y.col = c(2010, 2012),
-#                   y.HND = c(2006:2010),
-#                   y.pry = c(2006,2010),
+# dd <- table_baker(COL = c(2010, 2012),
+#                   HND = c(2006:2010),
+#                   PRY = c(2006,2010),
 #                   x = c(4,5), y = 8, "ff")
+# dd
 # eval(dd[[3]])
 #
 #
