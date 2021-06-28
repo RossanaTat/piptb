@@ -11,26 +11,89 @@
 #' @export
 #'
 #' @examples
-table_baker <- function(vars       = NULL,
-                        weight     = NULL,
-                        col        = NULL,
-                        row        = NULL,
-                        scol       = NULL,
-                        srow       = NULL,
-                        by_vars    = c(col, row, scol, srow),
-                        stats      = "mean",
-                        format     = c("long", "wide"),
-                        povline    = 1.9,
-                        by_survey  = getOption("by_survey.tb"),
-                        id_var     = c("cache_id", "survey_id"),
+table_baker <- function(vars        = NULL,
+                        weight      = NULL,
+                        col         = NULL,
+                        row         = NULL,
+                        scol        = NULL,
+                        srow        = NULL,
+                        by_vars     = c(col, row, scol, srow),
+                        stats       = "mean",
+                        format      = c("long", "wide"),
+                        povline     = 1.9,
+                        by_survey   = getOption("by_survey.tb"),
+                        id_var      = c("cache_id", "survey_id"),
+                        max_country = getOption("piptb.max_country"),
+                        max_survey  = getOption("piptb.max_survey"),
                         ...) {
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## Get country codes --------
 
   dots             <- list(...)
   dots_names       <- names(dots)
   country_codes    <- grep("^[A-Z]{3}",
                       dots_names,
                       value = TRUE)
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## Check countries belong to country list --------
+
+  if (!all(country_codes %in% getOption("piptb.all_countries"))) {
+    msg     <- "Country codes selected do not belong to countries list"
+    hint    <- "Make sure you spelled the country codes correctly"
+    rlang::abort(c(
+                  msg,
+                  i = hint
+                  ),
+                  class = "piptb_error"
+                  )
+  }
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## count number of countries and surveys --------
+
+  # Countries
+  if (length(country_codes) >= max_country) {
+    msg     <- "Number of countries exceeded"
+    problem <- glue::glue("You specified {length(country_codes)} countries,
+                          but you're allowed only {max_country}.")
+    rlang::abort(c(
+                  msg,
+                  x = problem
+                  ),
+                  class = "piptb_error"
+                  )
+  }
+
+  # surveys
   countries_values <- dots[country_codes]
+
+  nsurveys <- vector(mode = "numeric",
+                     length = length(countries_values))
+  for(i in seq_along(countries_values)) {
+    nsurveys[i] <- length(countries_values[[i]])
+  }
+
+  nsurveys <- sum(nsurveys)
+  if (nsurveys >= max_survey) {
+    msg     <- "Number of surveys exceeded"
+    problem <- glue::glue("You specified {nsurveys} surveys,
+                          but you're allowed only {max_survey}.")
+    rlang::abort(c(
+      msg,
+      x = problem
+    ),
+    class = "piptb_error"
+    )
+  }
+
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Create filter   ---------
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
 
   purrr::pmap(list(country = country_codes,
                    year    = countries_values),
