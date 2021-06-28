@@ -2,10 +2,9 @@
 #'
 #' @inheritParams tb
 #' @param ... arguments with survey years for each country.
-#' Argument name should have the form "y.ccc" where "y." is a
-#' mandatory prefix and "ccc" refers to the country code. For
-#' instance, it should be of the form `y.col = c(2010, 2012)`
-#' to get household survey data for Colombia (col) for 2010
+#' Argument name should be three-letter country code in upper cases.
+#' For instance, it should be of the form `COL = c(2010, 2012)`
+#' to get household survey data for Colombia (COL) for 2010
 #' and 2012.
 #'
 #' @return
