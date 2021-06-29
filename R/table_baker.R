@@ -72,7 +72,7 @@ table_baker <- function(vars        = NULL,
   nsurveys <- vector(mode = "numeric",
                      length = length(countries_values))
   for(i in seq_along(countries_values)) {
-    nsurveys[i] <- length(countries_values[[i]])
+    nsurveys[i] <- length(countries_values[i])
   }
 
   nsurveys <- sum(nsurveys)
@@ -92,13 +92,15 @@ table_baker <- function(vars        = NULL,
   # Create filter   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+  filters <- glue::glue('(country_code == "{country_codes}"
+                        & surveyid_year %in% {countries_values})')
+  filters <- glue::glue_collapse(filters, sep = " | ")
 
+  filters <- parse(text = filters)
 
-
-  purrr::pmap(list(country = country_codes,
-                   year    = countries_values),
-                   fake_load)
+  # THen use with eval(filters)
 }
+
 # debugonce(table_baker)
 # dd <- table_baker(COL = c(2010, 2012),
 #                   HND = c(2006:2010),
@@ -114,24 +116,3 @@ table_baker <- function(vars        = NULL,
 #   tb(dt,
 #      vars = "welfare_ppp",
 #      weight = "weight")[]
-
-#' Fake load function
-#'
-#' @param country
-#' @param year
-#'
-#' @return
-#' @export
-#'
-#' @examples
-fake_load <- function(country, year) {
-
-  callf <- rlang::call2("pip_load_cache",
-                        country = country,
-                        year    = year,
-                        .ns = "pipload")
-
-  callf
-}
-# qq <- fake_load("PRY", c(2007:2009))
-# df <- eval(qq)
