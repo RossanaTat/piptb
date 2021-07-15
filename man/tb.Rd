@@ -15,7 +15,7 @@ tb(
   by_vars = c(col, row, scol, srow),
   stats = "mean",
   format = c("long", "wide"),
-  povline = 1.9,
+  povlines = 1.9,
   by_survey = getOption("by_survey.tb"),
   id_var = c("cache_id", "survey_id")
 )
@@ -24,7 +24,7 @@ tb(
 \item{.data}{dataframe with microdata information}
 
 \item{vars}{variables to analyze. If "pov_status" selected, estimates will be
-done for poverty status for each value in `povline` If NULL, size
+done for poverty status for each value in `povlines` If NULL, size
 population of population in each group is calculated}
 
 \item{weight}{sampling weight variable}
@@ -43,7 +43,7 @@ population of population in each group is calculated}
 
 \item{format}{character: Either "long" or "wide". Default is "long"}
 
-\item{povline}{numeric: vector with poverty lines at daily 2011 ppp values.
+\item{povlines}{numeric: vector with poverty lines at daily 2011 ppp values.
 Default is 1.9}
 
 \item{by_survey}{logical: If TRUE include variable "cache_id" as part of the

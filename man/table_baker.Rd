@@ -17,12 +17,14 @@ table_baker(
   povline = 1.9,
   by_survey = getOption("by_survey.tb"),
   id_var = c("cache_id", "survey_id"),
+  max_country = getOption("piptb.max_country"),
+  max_survey = getOption("piptb.max_survey"),
   ...
 )
 }
 \arguments{
 \item{vars}{variables to analyze. If "pov_status" selected, estimates will be
-done for poverty status for each value in `povline` If NULL, size
+done for poverty status for each value in `povlines` If NULL, size
 population of population in each group is calculated}
 
 \item{weight}{sampling weight variable}
@@ -40,9 +42,6 @@ population of population in each group is calculated}
 \item{stats}{Statistics to estimate}
 
 \item{format}{character: Either "long" or "wide". Default is "long"}
-
-\item{povline}{numeric: vector with poverty lines at daily 2011 ppp values.
-Default is 1.9}
 
 \item{by_survey}{logical: If TRUE include variable "cache_id" as part of the
 grouping variables.}

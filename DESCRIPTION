@@ -16,7 +16,8 @@ Depends:
 Imports: 
     data.table,
     collapse,
-    glue
+    glue,
+    utils
 Suggests:
     rmarkdown,
     knitr,

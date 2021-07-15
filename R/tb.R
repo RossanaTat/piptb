@@ -2,7 +2,7 @@
 #'
 #' @param .data dataframe with microdata information
 #' @param vars variables to analyze. If "pov_status" selected, estimates will be
-#'   done for poverty status for each value in `povline` If NULL, size
+#'   done for poverty status for each value in `povlines` If NULL, size
 #'   population of population in each group is calculated
 #' @param weight sampling weight variable
 #' @param col column variable
@@ -12,7 +12,7 @@
 #' @param by_vars combination of `c(col, row, scol, srow)`
 #' @param stats Statistics to estimate
 #' @param format character: Either "long" or "wide". Default is "long"
-#' @param povline numeric: vector with poverty lines at daily 2011 ppp values.
+#' @param povlines numeric: vector with poverty lines at daily 2011 ppp values.
 #'   Default is 1.9
 #' @param by_survey logical: If TRUE include variable "cache_id" as part of the
 #'   grouping variables.
@@ -40,7 +40,7 @@ tb <- function(.data,
                by_vars    = c(col, row, scol, srow),
                stats      = "mean",
                format     = c("long", "wide"),
-               povline    = 1.9,
+               povlines    = 1.9,
                by_survey  = getOption("by_survey.tb"),
                id_var     = c("cache_id", "survey_id")
                ) {
@@ -126,11 +126,11 @@ tb <- function(.data,
 
   if ("pov_status" %in% vars) {
 
-    for (i in seq_along(povline)) {
-      name_var <- paste0("poor_", povline[i])
+    for (i in seq_along(povlines)) {
+      name_var <- paste0("poor_", povlines[i])
 
-      # .data[[name_var]] <- as.numeric(.data$welfare_ppp < povline[i])
-      .data[, (name_var) := as.numeric(welfare_ppp < povline[i]) ]
+      # .data[[name_var]] <- as.numeric(.data$welfare_ppp < povlines[i])
+      .data[, (name_var) := as.numeric(welfare_ppp < povlines[i]) ]
     }
 
     poor_vars <- grep("^poor_", names(.data), value = TRUE)
@@ -166,20 +166,20 @@ tb <- function(.data,
   if (length(stats) == 1) {
 
     setDT(dt)
-    dt[, estimate := (stats)]
+    dt[, statistics := (stats)]
 
   } else {
 
     setDT(dt)
-    setnames(dt, "Function", "estimate")
-    dt[, estimate := gsub("^f", "", estimate)]
+    setnames(dt, "Function", "statistics")
+    dt[, statistics := gsub("^f", "", statistics)]
 
   }
 
   if (is.character(by_vars)) {
-    setcolorder(dt, c("estimate", by_vars))
+    setcolorder(dt, c("statistics", by_vars))
   } else {
-    setcolorder(dt, "estimate")
+    setcolorder(dt, "statistics")
   }
 
   if ("ones.." %in% vars) {

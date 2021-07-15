@@ -104,23 +104,23 @@ tb(dt,
 # BIG data
 
 ```{r big-setup}
-col <- pipload::pip_load_cache("COL", tool = "TB")
+dt <- pipload::pip_load_cache("COL", tool = "TB")
 ```
 
-Compilation of `r length(col[, unique(survey_id)])` surveys, with `r format(dim(col)[1], big.mark = ",")` observations.  Default options is `by_survey = TRUE`
+Compilation of `r length(dt[, unique(survey_id)])` surveys, with `r format(dim(dt)[1], big.mark = ",")` observations.  Default options is `by_survey = TRUE`
 
 ```{r big-cals}
 
 # Basic use. mean default
 system.time({
-   tb(col,
+   tb(dt,
       vars = "welfare_ppp", 
       weight = "weight")
 })
 
 # Basic use. by area and gender
 system.time({
-   tb(col,
+   tb(dt,
       vars = "welfare_ppp", 
       weight = "weight", 
       col   = "area", 
@@ -130,7 +130,7 @@ system.time({
 
 # Poverty status
 system.time({
-   tb(col,
+   tb(dt,
       vars = "pov_status", 
       weight = "weight", 
       col   = "area", 
@@ -141,7 +141,7 @@ system.time({
 # Poverty status and welfare
 system.time({
    
-tb(col,
+tb(dt,
    vars = c("pov_status", "welfare_ppp", "welfare_lcu"), 
    weight = "weight", 
    col   = "area", 
@@ -153,7 +153,7 @@ tb(col,
 # sum for poor is the number of people
 system.time({
    
-tb(col,
+tb(dt,
    vars = c("pov_status", "welfare_ppp"), 
    weight = "weight", 
    col   = "area", 
@@ -165,7 +165,7 @@ tb(col,
 # Add more poverty lines
 system.time({
    
-tb(col,
+tb(dt,
    vars = c("pov_status", "welfare_ppp"), 
    weight = "weight", 
    col   = "area", 
@@ -180,7 +180,7 @@ tb(col,
 # add super column
 system.time({
    
-tb(col,
+tb(dt,
    vars = c("welfare_ppp"), 
    weight = "weight", 
    col   = "area", 
@@ -192,7 +192,7 @@ tb(col,
 # add super row
 system.time({
    
-tb(col,
+tb(dt,
    vars = c("welfare_ppp"), 
    weight = "weight", 
    col   = "area", 
@@ -205,7 +205,7 @@ tb(col,
 # Size of population (vars = NULL)
 system.time({
    
-tb(col,
+tb(dt,
    # vars = "pov_status", 
    weight = "weight", 
    col   = "area", 
