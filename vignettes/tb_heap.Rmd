@@ -1,0 +1,23 @@
+---
+title: "tb_heap"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tb_heap}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(piptb)
+.data <- pipload::pip_load_cache("PRY", year = 2019, tool = "TB")
+
+dt <- tb_heap(.data = .data)
+
+```
