@@ -89,6 +89,22 @@ tb_heap <- function(.data,
      nvars := lcols - Reduce("+", lapply(.SD, is.na)),
      .SDcols = dimensions]
 
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Re name variables   ---------
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  dt <- dt[, !"ID"]
+
+  ## prefix dim to dimensions variables
+  data.table::setnames(dt,
+                       dimensions,
+                       paste0("dim_", dimensions))
+
+  ## preffix int for variables of interest
+
+  intvars <- grep("^(welfare|poor)", names(dt), value = TRUE)
+  data.table::setnames(dt,
+                       intvars,
+                       paste0("int_", intvars))
 
   return(dt)
 
