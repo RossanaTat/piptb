@@ -22,6 +22,10 @@ dt <- tb_heap(.data = .data)
 
 # dt <- dt[, !"ID"]
 # 
-# jsonlite::write_json(dt, glue::glue("{tdirp}/table_maker_test.json"))
+# 
+# jsonlite::write_json(x = dt, 
+#                      path = glue::glue("{tdirp}/table_maker_test.json"),
+#                      na  = "null", 
+#                      pretty = FALSE)
 
 ```
