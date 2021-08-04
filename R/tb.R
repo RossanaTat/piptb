@@ -153,12 +153,12 @@ tb <- function(.data,
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   suppressWarnings({
-    dt <- collapv(.data,
-                   cols   = vars,
-                   by     = by_vars,
-                   w      = population,
-                   FUN    = fs,
-                   return = format)
+    dt <- collapse::collapv(.data,
+                            cols   = vars,
+                            by     = by_vars,
+                            w      = population,
+                            FUN    = fs,
+                            return = format)
   })
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

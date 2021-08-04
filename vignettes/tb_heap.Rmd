@@ -20,12 +20,70 @@ library(piptb)
 
 dt <- tb_heap(.data = .data)
 
-# dt <- dt[, !"ID"]
-# 
-# 
-# jsonlite::write_json(x = dt, 
-#                      path = glue::glue("{tdirp}/table_maker_test.json"),
-#                      na  = "null", 
-#                      pretty = FALSE)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# change names   ---------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+original <- names(dt)
+
+
+new <- gsub(pattern     = "([a-z]{1})([a-z]*)_([a-z]{1})([a-z]*)_([0-9\\.]+)", 
+            replacement = "\\1\\3\\5", 
+            x           = original)
+
+new <- gsub(pattern     = "([a-z]{1})([a-z]*)_([a-z]{1})([a-z]*)_([a-z]{1})([a-z]*)", 
+            replacement = "\\1\\3\\5", 
+            x           = new)
+
+
+new <- gsub(pattern     = "([a-z]{1})([a-z]*)_([a-z]{1})([a-z]*)", 
+            replacement = "\\1\\3", 
+            x           = new)
+
+
+new <- gsub(pattern     = "([a-z]{3})([a-z]*)", 
+            replacement = "\\1\\3\\5", 
+            x           = new)
+
+
+nr <- data.table(original = original, 
+                 new      = new)
+
+
+setnames(dt, original, new)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# reduce number of digits   ---------
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+num_names <- names(dt)[sapply(dt, is.numeric)]
+
+dt[, 
+   (num_names) := lapply(.SD, round, 4), 
+   .SDcols = is.numeric]
+
+
+
+jsonlite::write_json(x = dt, 
+                     path = glue::glue("{tdirp}/table_maker_test.json"),
+                     na  = "null", 
+                     pretty = FALSE)
+
+
+readr::write_csv(x = dt, 
+                 file = glue::glue("{tdirp}/table_maker_test.csv"),
+                 col_names = TRUE, 
+                 na = "")
+
+
+
+readr::write_csv(x = nr, 
+                 file = glue::glue("{tdirp}/variable_name_relation.csv"),
+                 col_names = TRUE, 
+                 na = "")
+
 
 ```
