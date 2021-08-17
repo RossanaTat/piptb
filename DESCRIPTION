@@ -19,7 +19,8 @@ Imports:
     glue,
     utils,
     arrow,
-    dplyr
+    dplyr,
+    cli
 Suggests:
     rmarkdown,
     knitr,
