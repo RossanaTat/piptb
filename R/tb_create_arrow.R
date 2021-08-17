@@ -24,13 +24,6 @@ tb_create_arrow <- function(country        = NULL,
                             arrow_format   = c("parquet", "feather"),
                             root_dir       = Sys.getenv("PIP_root_dir")) {
 
-  # on.exit ------------
-  on.exit({
-    if (requireNamespace("pushoverr", quietly = TRUE)) {
-      pushoverr::pushover("Done creating Arrow files")
-    }
-  })
-
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Check arguments --------
@@ -47,10 +40,10 @@ tb_create_arrow <- function(country        = NULL,
     bad_ctr <- country[ctr]
     cli::cli_abort(c("{length(bad_ctr)} countr{?y/ies} {?is/are} not allowed",
 
-                     "i" = "Make sure all your country codes arw available in
+                     "i" = "Make sure all your country codes are available in
                      {.code getOption('piptb.all_countries')}",
 
-                     "x" = "Bad country-code: {.field {bad_ctr}}"))
+                     "x" = "Bad country code: {.field {bad_ctr}}"))
   }
 
   # Acronym with more than one country
@@ -96,7 +89,7 @@ tb_create_arrow <- function(country        = NULL,
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## create arrow files --------
 
-  tryCatch(
+  res <- tryCatch(
     expr = {
       # Your code...
       dt %>%
@@ -109,17 +102,15 @@ tb_create_arrow <- function(country        = NULL,
     }, # end of expr section
 
     error = function(e) {
-      cli::cli_abort(c("error creating {.field {arrow_format}} files.",
-                       "x" = e$message))
+      e$message
 
     }, # end of error section
 
     warning = function(w) {
-      cli::cli_warn(c("error creating {.field {arrow_format}} files.",
-                       "x" = w$message))
+      w$message
     }
   ) # End of trycatch
 
   # Return -------------
-  return(invisible(TRUE))
+  return(res)
 }
