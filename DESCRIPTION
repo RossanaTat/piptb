@@ -17,12 +17,15 @@ Imports:
     data.table,
     collapse,
     glue,
-    utils
+    utils,
+    arrow,
+    dplyr
 Suggests:
     rmarkdown,
     knitr,
     pipload,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    pushoverr
 URL: https://github.com/randrescastaneda/tablemaker
 BugReports: https://github.com/randrescastaneda/tablemaker/issues
 VignetteBuilder: knitr

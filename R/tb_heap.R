@@ -92,7 +92,7 @@ tb_heap <- function(.data,
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Re name variables   ---------
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  dt <- dt[, !"ID"]
+  # dt <- dt[, !"ID"]
 
   ## prefix dim to dimensions variables
   data.table::setnames(dt,
