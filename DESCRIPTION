@@ -1,5 +1,5 @@
 Package: piptb
-Title: Compute estimates for the Table Maker UI of Project X
+Title: Compute estimates for the Table Maker UI of PIP
 Version: 0.0.1.9001
 Authors@R: 
     person(given = "R.Andres",
@@ -28,7 +28,7 @@ Suggests:
     knitr,
     testthat (>= 3.0.0),
     pushoverr
-URL: https://github.com/randrescastaneda/tablemaker
-BugReports: https://github.com/randrescastaneda/tablemaker/issues
+URL: https://github.com/PIP-Technical-Team/piptb
+BugReports: https://github.com/PIP-Technical-Team/piptb/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3
