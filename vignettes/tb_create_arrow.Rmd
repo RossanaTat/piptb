@@ -1,0 +1,42 @@
+---
+title: "tb_create_arrow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tb_create_arrow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(piptb)
+gls <- create_globals(Sys.getenv("PIP_root_dir"))
+
+# get countries in Table maker
+inv <- fst::read_fst(paste0(gls$CACHE_SVY_TB_DIR, "_crr_inventory/crr_inventory.fst"),
+                     as.data.table = TRUE)
+
+countries_tb <-
+  inv[,
+      country_code := data.table::tstrsplit(cache_id, "_", fixed = TRUE, keep = 1)
+  ][,unique(country_code)]
+
+
+tb_create_arrow_poss <- purrr::possibly(tb_create_arrow, 
+                                        otherwise = NULL)
+
+lr <- purrr::map(countries_tb, 
+          tb_create_arrow_poss)
+
+names(lr) <- countries_tb
+
+pushover("Done with tb_create_arrow")
+
+
+```

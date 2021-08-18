@@ -26,7 +26,7 @@ create_globals <- function(root_dir = '//w1wbgencifs01/pip') {
 
   glbs$TB_ARROW         <- paste0(glbs$PIP_PIPE_DIR, 'tb_data/arrow/')
 
-  glbs$CACHE_SVY_TM_DIR <- paste0(glbs$TB_DATA, 'cache/clean_survey_data/')
+  glbs$CACHE_SVY_TB_DIR <- paste0(glbs$TB_DATA, 'cache/clean_survey_data/')
 
   ### Max dates --------
 

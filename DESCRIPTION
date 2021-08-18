@@ -20,11 +20,12 @@ Imports:
     utils,
     arrow,
     dplyr,
-    cli
+    cli,
+    pipload,
+    fst
 Suggests:
     rmarkdown,
     knitr,
-    pipload,
     testthat (>= 3.0.0),
     pushoverr
 URL: https://github.com/randrescastaneda/tablemaker

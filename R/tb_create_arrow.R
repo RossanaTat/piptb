@@ -22,7 +22,8 @@ tb_create_arrow <- function(country        = NULL,
                             data_level     = NULL,
                             welfare_type   = NULL,
                             arrow_format   = c("parquet", "feather"),
-                            root_dir       = Sys.getenv("PIP_root_dir")) {
+                            root_dir       = Sys.getenv("PIP_root_dir"),
+                            verbose        = TRUE) {
 
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,10 +33,19 @@ tb_create_arrow <- function(country        = NULL,
   # globals
   gls <- create_globals(root_dir)
 
+  # get countries in Table maker
+  inv <- fst::read_fst(paste0(gls$CACHE_SVY_TB_DIR, "_crr_inventory/crr_inventory.fst"),
+                       as.data.table = TRUE)
+
+  countries_tb <-
+    inv[,
+        country_code := data.table::tstrsplit(cache_id, "_", fixed = TRUE, keep = 1)
+        ][,unique(country_code)]
+
   # Defenses -----------
 
   # all countries are ok
-  ctr    <- !(country %in% getOption("piptb.all_countries"))
+  ctr    <- !(country %in% countries_tb)
   if (any(ctr)) {
     bad_ctr <- country[ctr]
     cli::cli_abort(c("{length(bad_ctr)} countr{?y/ies} {?is/are} not allowed",
@@ -56,6 +66,11 @@ tb_create_arrow <- function(country        = NULL,
                      "x" = "{.code length(country)} = {.field {length(country)}}"))
   }
 
+
+  if (verbose) {
+    cli::cli_progress_step("working on {country}")
+  }
+
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Load data and make calculations  --------
   # Working directory
@@ -67,11 +82,16 @@ tb_create_arrow <- function(country        = NULL,
                                    data_level     = data_level,
                                    welfare_type   = welfare_type,
                                    tool           = "TB",
-                                   pipedir        = gls$PIP_PIPE_DIR)
+                                   pipedir        = gls$PIP_PIPE_DIR,
+                                   verbose        = verbose)
 
   # make calculations
+  if (verbose) {
+    cli::cli_progress_step("performing calculations for all files")
+  }
   dt <- tb_heap(.data = .data)
 
+  # ID vars in cache ID
   idvars <-
     c(
       "country_code",
@@ -82,13 +102,16 @@ tb_create_arrow <- function(country        = NULL,
       "source"
     )
 
+
   dt[,
      (idvars) := data.table::tstrsplit(ID, "_", fixed = TRUE)]
 
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## create arrow files --------
-
+  if (verbose) {
+    cli::cli_progress_step("Saving arrow files")
+  }
   res <- tryCatch(
     expr = {
       # Your code...
