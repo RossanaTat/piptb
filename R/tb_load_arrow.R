@@ -11,26 +11,66 @@
 #'
 #' @examples
 tb_load_arrow <-
-  function(country_code   = NULL,
+  function(country_code   ,
            surveyid_year  = NULL,
-           survey_acronym = NULL,
            domain         = NULL,
-           welfare_type   = NULL) {
+           welfare_type   = NULL,
+           arrow_format   = c("parquet", "feather"),
+           root_dir       = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+           ...
+  ) {
 
-    # on.exit ------------
-    on.exit({
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ## Check arguments --------
+    arrow_format <- match.arg(arrow_format)
 
-    })
+    # get all arguments
+    # argus <- c(as.list(environment()), list(...))
+    argus <- c(as.list(environment()))
 
-    # Defenses -----------
-    stopifnot()
+    # globals
+    gls <- create_globals(root_dir)
 
-    # Early returns ------
-    if (TRUE) {
-      return(TRUE)
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ## filter  --------
+
+    # Build the filter
+
+    vars_toeval <- c("country_code", "surveyid_year", "welfare_type")
+    argus       <- argus[vars_toeval]
+    toeval      <- vector(mode = "list")
+    i           <- 0
+
+    for(n in seq_along(argus)) {
+
+      if (!is.null(argus[[n]])) {
+        i <- i + 1
+
+        # Name of the variable
+        varname  <- names(argus[n])
+
+        # Value to evaluate
+        varvalue <- paste0("varvalue",i)
+        assign(varvalue, argus[[n]])
+
+        toeval[i] <- paste(varname, "%in%", varvalue)
+      }
     }
 
+    toeval <- paste(toeval, collapse = " & ")
+    toeval <- rlang::parse_expr(toeval)
+
+    # Working directory
+    arrow_dir <- paste0(gls$TB_ARROW, arrow_format, "/")
+    # da <- arrow::open_dataset(arrow_dir, format = arrow_format)
+
+    return(toeval)
     # Computations -------
+    da %>%
+      dplyr::filter(rlang::eval_tidy(toeval)) %>%
+      dplyr::collect()
 
 
     # Return -------------
