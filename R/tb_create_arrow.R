@@ -118,8 +118,8 @@ tb_create_arrow <- function(country_code   = NULL,
       # Your code...
       dt %>%
         dplyr::as_tibble() %>%  # arrow does not accept data.table format
-        dplyr::group_by(country_code, surveyid_year, survey_acronym,
-                        max_domain, welfare_type) %>%
+        dplyr::mutate(surveyid_year = as.numeric(surveyid_year)) %>%
+        dplyr::group_by(country_code, surveyid_year, welfare_type) %>%
         # group_by(country_code) %>%
         dplyr::select(-ID) %>%
         arrow::write_dataset(arrow_dir, format = arrow_format)
