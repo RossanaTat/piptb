@@ -64,16 +64,16 @@ tb_load_arrow <-
 
     # Working directory
     arrow_dir <- paste0(gls$TB_ARROW, arrow_format, "/")
-    # da <- arrow::open_dataset(arrow_dir, format = arrow_format)
+    da <- arrow::open_dataset(arrow_dir, format = arrow_format)
 
-    return(toeval)
+    # return(toeval)
     # Computations -------
-    da %>%
+
+    dt <- da %>%
       dplyr::filter(rlang::eval_tidy(toeval)) %>%
       dplyr::collect()
 
-
     # Return -------------
-
+    return(dt)
 
   }
