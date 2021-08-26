@@ -1,10 +1,8 @@
 #' Load pre-computed  estimation of Table Maker
 #'
-#' @param country_code
-#' @param surveyid_year
-#' @param survey_acronym
-#' @param domain
-#' @param welfare_type
+#' @inheritParams tb_create_arrow
+#' @inheritParams tb
+#' @param ... additional parameters
 #'
 #' @return
 #' @export
@@ -15,6 +13,15 @@ tb_load_arrow <-
            surveyid_year  = NULL,
            domain         = NULL,
            welfare_type   = NULL,
+           vars           = NULL,
+           weight         = NULL,
+           col            = NULL,
+           row            = NULL,
+           scol           = NULL,
+           srow           = NULL,
+           by_vars        = c(col, row, scol, srow),
+           stats          = "mean",
+           povlines       = 1.9,
            arrow_format   = c("parquet", "feather"),
            root_dir       = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
            ...

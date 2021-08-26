@@ -1,11 +1,13 @@
 #' Table baker to interact with API
 #'
 #' @inheritParams tb
-#' @param ... arguments with survey years for each country.
-#' Argument name should be three-letter country code in upper cases.
-#' For instance, it should be of the form `COL = c(2010, 2012)`
-#' to get household survey data for Colombia (COL) for 2010
-#' and 2012.
+#' @param data_connect object of class "FileSystemDataset",  "Dataset",
+#'   "ArrowObject", and  "R6". It holds the connection to the pre-computed
+#'   indicators of the table baker
+#' @param ... arguments with survey years for each country. Argument name should
+#'   be three-letter country code in upper cases. For instance, it should be of
+#'   the form `COL = c(2010, 2012)` to get household survey data for Colombia
+#'   (COL) for 2010 and 2012.
 #'
 #' @return
 #' @export
@@ -27,6 +29,7 @@ table_baker <- function(vars          = NULL,
                         max_survey    = getOption("piptb.max_survey"),
                         arrow_format  = c("parquet", "feather"),
                         root_dir      = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+                        data_connect  = NULL,
                         ...) {
 
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,13 +100,16 @@ table_baker <- function(vars          = NULL,
   toeval <- rlang::parse_expr(filters)
 
   # Working directory
-  arrow_dir <- paste0(gls$TB_ARROW, arrow_format, "/")
-  da <- arrow::open_dataset(arrow_dir, format = arrow_format)
+
+  if (is.null(data_connect)) {
+    arrow_dir    <- paste0(gls$TB_ARROW, arrow_format, "/")
+    data_connect <- arrow::open_dataset(arrow_dir, format = arrow_format)
+  }
 
   # return(toeval)
   # Computations -------
 
-  dt <- da %>%
+  dt <- data_connect %>%
     dplyr::filter(rlang::eval_tidy(toeval)) %>%
     dplyr::collect()
 
