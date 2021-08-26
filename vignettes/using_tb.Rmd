@@ -16,12 +16,12 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(piptb)
-dt <- pipload::pip_load_cache("PRY", year = 2019, tool = "TB")
 ```
 
 
 # Basic use
-```{r basic}
+```{r basic, eval=FALSE}
+dt <- pipload::pip_load_cache("PRY", year = 2019, tool = "TB")
 
 # Basic use. mean default
 tb(dt,
@@ -68,7 +68,7 @@ tb(dt,
    col   = "area", 
    row   = "gender", 
    stats = c("mean", "sum"), 
-   povline = c(1.9, 3.2, 5.5))[]
+   povlines = c(1.9, 3.2, 5.5))[]
 
 
 
@@ -103,13 +103,12 @@ tb(dt,
 
 # BIG data
 
-```{r big-setup}
+```{r big-setup, eval=FALSE}
 dt <- pipload::pip_load_cache("COL", tool = "TB")
 ```
 
-Compilation of `r length(dt[, unique(survey_id)])` surveys, with `r format(dim(dt)[1], big.mark = ",")` observations.  Default options is `by_survey = TRUE`
 
-```{r big-cals}
+```{r big-cals, eval=FALSE}
 
 # Basic use. mean default
 system.time({

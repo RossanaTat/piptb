@@ -22,7 +22,9 @@ Imports:
     dplyr,
     cli,
     pipload,
-    fst
+    fst,
+    purrr,
+    rlang
 Suggests:
     rmarkdown,
     knitr,

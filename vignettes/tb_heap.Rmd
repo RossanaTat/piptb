@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, eval=FALSE}
 library(piptb)
 .data <- pipload::pip_load_cache("PRY", year = 2019, tool = "TB")
 
