@@ -5,9 +5,6 @@
 #' @param ... additional parameters
 #'
 #' @return
-#' @export
-#'
-#' @examples
 tb_load_arrow <-
   function(country_code   ,
            surveyid_year  = NULL,

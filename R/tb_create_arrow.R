@@ -14,8 +14,6 @@
 #'
 #' @return
 #' @export
-#'
-#' @examples
 tb_create_arrow <- function(country_code   = NULL,
                             surveyid_year  = NULL,
                             survey_acronym = NULL,

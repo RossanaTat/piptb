@@ -13,6 +13,12 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' dw <- table_baker(COL = c(2010, 2012),
+#'   HND = c(2006:2010),
+#'   PRY = c(2006,2010),
+#'   BRA = 2018)
+#' }
 table_baker <- function(vars          = NULL,
                         weight        = NULL,
                         col           = NULL,

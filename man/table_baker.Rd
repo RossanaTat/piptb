@@ -19,6 +19,9 @@ table_baker(
   id_var = c("cache_id", "survey_id"),
   max_country = getOption("piptb.max_country"),
   max_survey = getOption("piptb.max_survey"),
+  arrow_format = c("parquet", "feather"),
+  root_dir = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+  data_connect = NULL,
   ...
 )
 }
@@ -49,15 +52,26 @@ grouping variables.}
 \item{id_var}{characger: variable used to uniquely identify surveys. It could
 be "cache_id" or "survey_id". Default is "cache_id".}
 
-\item{...}{arguments with survey years for each country.
-Argument name should be three-letter country code in upper cases.
-For instance, it should be of the form `COL = c(2010, 2012)`
-to get household survey data for Colombia (COL) for 2010
-and 2012.}
+\item{data_connect}{object of class "FileSystemDataset",  "Dataset",
+"ArrowObject", and  "R6". It holds the connection to the pre-computed
+indicators of the table baker}
+
+\item{...}{arguments with survey years for each country. Argument name should
+be three-letter country code in upper cases. For instance, it should be of
+the form `COL = c(2010, 2012)` to get household survey data for Colombia
+(COL) for 2010 and 2012.}
 }
 \value{
 
 }
 \description{
 Table baker to interact with API
+}
+\examples{
+\dontrun{
+dw <- table_baker(COL = c(2010, 2012),
+  HND = c(2006:2010),
+  PRY = c(2006,2010),
+  BRA = 2018)
+}
 }

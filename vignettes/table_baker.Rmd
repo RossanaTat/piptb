@@ -1,0 +1,41 @@
+---
+title: "table_baker"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{table_baker}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(piptb)
+
+# Execute with connection previously established
+dw <- table_baker(COL = c(2010, 2012),
+                  HND = c(2006:2010),
+                  PRY = c(2006,2010),
+                  BRA = 2018,
+                  data_connect = data_connect)
+
+# Create the connection inside the function
+dw <- table_baker(COL = c(2010, 2012),
+                  HND = c(2006:2010),
+                  PRY = c(2006,2010),
+                  BRA = 2018)
+
+# Create the connection inside the function using the directory path of the
+# remote server
+dw <- table_baker(COL = c(2010, 2012),
+                  HND = c(2006:2010),
+                  PRY = c(2006,2010),
+                  BRA = 2018,
+                  root_dir = Sys.getenv("PIP_DATA_ROOT_FOLDER_SERVER"))
+
+```
