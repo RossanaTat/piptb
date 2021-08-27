@@ -1,4 +1,4 @@
-# piptb (development version)
+# piptb 0.1.0
 
 * Add option of `vars = NULL` for the calculation of population size in each group.
 

@@ -1,6 +1,6 @@
 Package: piptb
 Title: Compute estimates for the Table Maker UI of PIP
-Version: 0.0.1.9002
+Version: 0.1.0
 Authors@R: 
     person(given = "R.Andres",
            family = "Castaneda",
