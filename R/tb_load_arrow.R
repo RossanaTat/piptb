@@ -20,7 +20,7 @@ tb_load_arrow <-
            stats          = "mean",
            povlines       = 1.9,
            arrow_format   = c("parquet", "feather"),
-           root_dir       = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+           root_dir       = Sys.getenv("PIP_ROOT_DIR"),
            ...
   ) {
 

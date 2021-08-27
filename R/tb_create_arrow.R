@@ -8,7 +8,7 @@
 #'   "D3" for subnational
 #' @param arrow_format character: either "parquet" of "feather". Former default.
 #' @param root_dir character: directory path. Default
-#'   `Sys.getenv("PIP_root_dir")`
+#'   `Sys.getenv("PIP_ROOT_dir")`
 #' @param welfare_type character: Either "CON" for consumption or "INC" for
 #'   income
 #'
@@ -20,7 +20,7 @@ tb_create_arrow <- function(country_code   = NULL,
                             data_level     = NULL,
                             welfare_type   = NULL,
                             arrow_format   = c("parquet", "feather"),
-                            root_dir       = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+                            root_dir       = Sys.getenv("PIP_ROOT_DIR"),
                             verbose        = TRUE) {
 
 
