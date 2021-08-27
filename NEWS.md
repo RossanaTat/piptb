@@ -1,6 +1,5 @@
 # piptb 0.0.2
-
-# piptb 0.1.0
+* Change global variables to new names
 
 * Add option of `vars = NULL` for the calculation of population size in each group.
 
