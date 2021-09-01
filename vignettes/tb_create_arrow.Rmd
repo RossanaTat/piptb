@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, eval=FALSE}
 library(piptb)
 gls <- create_globals(Sys.getenv("PIP_root_dir"))
 
