@@ -35,6 +35,7 @@ table_baker <- function(vars          = NULL,
                         max_survey    = getOption("piptb.max_survey"),
                         arrow_format  = c("parquet", "feather"),
                         root_dir      = Sys.getenv("PIP_ROOT_DIR"),
+                        arrow_root    = gls$TB_ARROW,
                         data_connect  = NULL,
                         ...) {
 
@@ -48,8 +49,6 @@ table_baker <- function(vars          = NULL,
   argus <- c(as.list(environment()), list(...))
   # argus <- c(as.list(environment()))
 
-  # globals
-  gls <- create_globals(root_dir)
 
   # Get county/year relation in dots
   dots             <- list(...)
@@ -108,7 +107,7 @@ table_baker <- function(vars          = NULL,
   # Working directory
 
   if (is.null(data_connect)) {
-    arrow_dir    <- paste0(gls$TB_ARROW, arrow_format, "/")
+    arrow_dir    <- paste0(arrow_root, arrow_format, "/")
     data_connect <- arrow::open_dataset(arrow_dir, format = arrow_format)
   }
 
