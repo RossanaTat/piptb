@@ -1,6 +1,6 @@
 Package: piptb
 Title: Compute estimates for the Table Maker UI of PIP
-Version: 0.0.2
+Version: 0.0.2.9000
 Authors@R: 
     person(given = "R.Andres",
            family = "Castaneda",
@@ -34,5 +34,5 @@ URL: https://github.com/PIP-Technical-Team/piptb
 BugReports: https://github.com/PIP-Technical-Team/piptb/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Remotes:  
+Remotes: 
     github::PIP-Technical-Team/pipload
