@@ -1,6 +1,6 @@
 #' piptb: A package for managing the table maker of PIP
 #'
-#' The piptb package allows the user to perform the calcualtions, create the
+#' The piptb package allows the user to perform the calculations, create the
 #' tables, store the results and load the results of the Table Maker tool in PIP
 #'
 #' @section piptb functions: The piptb functions ...
@@ -8,4 +8,5 @@
 #' @docType package
 #' @name piptb
 #' @importFrom pipload pip_create_globals
+#' @import arrow
 NULL
