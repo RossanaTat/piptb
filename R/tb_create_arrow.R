@@ -8,21 +8,19 @@
 #'   "D3" for subnational
 #' @param arrow_format character: either "parquet" of "feather". Former default.
 #' @param root_dir character: directory path. Default
-#'   `Sys.getenv("PIP_root_dir")`
+#'   `Sys.getenv("PIP_ROOT_dir")`
 #' @param welfare_type character: Either "CON" for consumption or "INC" for
 #'   income
 #'
 #' @return
 #' @export
-#'
-#' @examples
 tb_create_arrow <- function(country_code   = NULL,
                             surveyid_year  = NULL,
                             survey_acronym = NULL,
                             data_level     = NULL,
                             welfare_type   = NULL,
                             arrow_format   = c("parquet", "feather"),
-                            root_dir       = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+                            root_dir       = Sys.getenv("PIP_ROOT_DIR"),
                             verbose        = TRUE) {
 
 
@@ -118,8 +116,8 @@ tb_create_arrow <- function(country_code   = NULL,
       # Your code...
       dt %>%
         dplyr::as_tibble() %>%  # arrow does not accept data.table format
-        dplyr::group_by(country_code, surveyid_year, survey_acronym,
-                        max_domain, welfare_type) %>%
+        dplyr::mutate(surveyid_year = as.numeric(surveyid_year)) %>%
+        dplyr::group_by(country_code, surveyid_year, welfare_type) %>%
         # group_by(country_code) %>%
         dplyr::select(-ID) %>%
         arrow::write_dataset(arrow_dir, format = arrow_format)

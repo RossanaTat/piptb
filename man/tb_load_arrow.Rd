@@ -9,13 +9,55 @@ tb_load_arrow(
   surveyid_year = NULL,
   domain = NULL,
   welfare_type = NULL,
+  vars = NULL,
+  weight = NULL,
+  col = NULL,
+  row = NULL,
+  scol = NULL,
+  srow = NULL,
+  by_vars = c(col, row, scol, srow),
+  stats = "mean",
+  povlines = 1.9,
   arrow_format = c("parquet", "feather"),
-  root_dir = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+  root_dir = Sys.getenv("PIP_ROOT_DIR"),
   ...
 )
 }
 \arguments{
-\item{welfare_type}{}
+\item{country_code}{character: vector with country codes}
+
+\item{surveyid_year}{numeric: Survey years}
+
+\item{welfare_type}{character: Either "CON" for consumption or "INC" for
+income}
+
+\item{vars}{variables to analyze. If "pov_status" selected, estimates will be
+done for poverty status for each value in `povlines` If NULL, size
+population of population in each group is calculated}
+
+\item{weight}{sampling weight variable}
+
+\item{col}{column variable}
+
+\item{row}{row variables}
+
+\item{scol}{super column variable}
+
+\item{srow}{super row variable}
+
+\item{by_vars}{combination of `c(col, row, scol, srow)`}
+
+\item{stats}{Statistics to estimate}
+
+\item{povlines}{numeric: vector with poverty lines at daily 2011 ppp values.
+Default is 1.9}
+
+\item{arrow_format}{character: either "parquet" of "feather". Former default.}
+
+\item{root_dir}{character: directory path. Default
+`Sys.getenv("PIP_ROOT_dir")`}
+
+\item{...}{additional parameters}
 }
 \value{
 

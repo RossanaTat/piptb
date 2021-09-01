@@ -1,5 +1,10 @@
 # piptb (development version)
 
+* use new way to load global variables
+
+# piptb 0.0.2
+* Change global variables to new names
+
 * Add option of `vars = NULL` for the calculation of population size in each group.
 
 # piptb 0.0.1

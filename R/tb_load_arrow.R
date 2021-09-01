@@ -1,22 +1,26 @@
 #' Load pre-computed  estimation of Table Maker
 #'
-#' @param country_code
-#' @param surveyid_year
-#' @param survey_acronym
-#' @param domain
-#' @param welfare_type
+#' @inheritParams tb_create_arrow
+#' @inheritParams tb
+#' @param ... additional parameters
 #'
 #' @return
-#' @export
-#'
-#' @examples
 tb_load_arrow <-
   function(country_code   ,
            surveyid_year  = NULL,
            domain         = NULL,
            welfare_type   = NULL,
+           vars           = NULL,
+           weight         = NULL,
+           col            = NULL,
+           row            = NULL,
+           scol           = NULL,
+           srow           = NULL,
+           by_vars        = c(col, row, scol, srow),
+           stats          = "mean",
+           povlines       = 1.9,
            arrow_format   = c("parquet", "feather"),
-           root_dir       = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+           root_dir       = Sys.getenv("PIP_ROOT_DIR"),
            ...
   ) {
 
@@ -64,16 +68,16 @@ tb_load_arrow <-
 
     # Working directory
     arrow_dir <- paste0(gls$TB_ARROW, arrow_format, "/")
-    # da <- arrow::open_dataset(arrow_dir, format = arrow_format)
+    da <- arrow::open_dataset(arrow_dir, format = arrow_format)
 
-    return(toeval)
+    # return(toeval)
     # Computations -------
-    da %>%
+
+    dt <- da %>%
       dplyr::filter(rlang::eval_tidy(toeval)) %>%
       dplyr::collect()
 
-
     # Return -------------
-
+    return(dt)
 
   }
