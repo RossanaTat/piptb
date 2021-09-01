@@ -20,7 +20,8 @@ table_baker(
   max_country = getOption("piptb.max_country"),
   max_survey = getOption("piptb.max_survey"),
   arrow_format = c("parquet", "feather"),
-  root_dir = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+  root_dir = Sys.getenv("PIP_ROOT_DIR"),
+  arrow_root = gls$TB_ARROW,
   data_connect = NULL,
   ...
 )

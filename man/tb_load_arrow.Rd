@@ -19,7 +19,7 @@ tb_load_arrow(
   stats = "mean",
   povlines = 1.9,
   arrow_format = c("parquet", "feather"),
-  root_dir = Sys.getenv("PIP_DATA_ROOT_FOLDER"),
+  root_dir = Sys.getenv("PIP_ROOT_DIR"),
   ...
 )
 }
@@ -55,7 +55,7 @@ Default is 1.9}
 \item{arrow_format}{character: either "parquet" of "feather". Former default.}
 
 \item{root_dir}{character: directory path. Default
-`Sys.getenv("PIP_root_dir")`}
+`Sys.getenv("PIP_ROOT_dir")`}
 
 \item{...}{additional parameters}
 }

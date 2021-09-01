@@ -1,5 +1,7 @@
 # piptb (development version)
 
+* use new way to load global variables
+
 # piptb 0.0.2
 * Change global variables to new names
 
