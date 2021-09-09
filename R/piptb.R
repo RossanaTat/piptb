@@ -7,6 +7,6 @@
 #'
 #' @docType package
 #' @name piptb
-#' @importFrom pipload pip_create_globals
+#' @importFrom pipload pip_create_globals add_gls_to_env
 #' @import arrow
 NULL
