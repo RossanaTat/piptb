@@ -52,9 +52,6 @@ grouping variables.}
 \item{id_var}{characger: variable used to uniquely identify surveys. It could
 be "cache_id" or "survey_id". Default is "cache_id".}
 }
-\value{
-
-}
 \description{
 Table Baker: cross-tabulate statistics for PIP microdata
 }

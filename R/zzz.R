@@ -34,7 +34,7 @@ pipuax_default_options <- list(
 
 
   # current objects
-  pipload::add_gls_to_env()
+  pipload:::add_gls_to_env()
 
   invisible()
 }

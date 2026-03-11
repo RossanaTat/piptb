@@ -62,9 +62,6 @@ be three-letter country code in upper cases. For instance, it should be of
 the form `COL = c(2010, 2012)` to get household survey data for Colombia
 (COL) for 2010 and 2012.}
 }
-\value{
-
-}
 \description{
 Table baker to interact with API
 }

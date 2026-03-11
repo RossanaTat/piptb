@@ -32,9 +32,6 @@ and poverty status}
 \item{povlines}{numeric: vector with poverty lines at daily 2011 ppp values.
 Default is 1.9}
 }
-\value{
-
-}
 \description{
 Table Baker heap: cross-tabulate combining all possibilities in one single
 household survey

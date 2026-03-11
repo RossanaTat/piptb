@@ -34,9 +34,6 @@ income}
 \item{root_dir}{character: directory path. Default
 `Sys.getenv("PIP_ROOT_dir")`}
 }
-\value{
-
-}
 \description{
 Create Arrow files of precalculated table Maker indicators
 }

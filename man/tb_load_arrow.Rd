@@ -59,9 +59,6 @@ Default is 1.9}
 
 \item{...}{additional parameters}
 }
-\value{
-
-}
 \description{
 Load pre-computed  estimation of Table Maker
 }

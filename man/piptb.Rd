@@ -2,6 +2,7 @@
 % Please edit documentation in R/piptb.R
 \docType{package}
 \name{piptb}
+\alias{piptb-package}
 \alias{piptb}
 \title{piptb: A package for managing the table maker of PIP}
 \description{
@@ -12,3 +13,15 @@ tables, store the results and load the results of the Table Maker tool in PIP
  The piptb functions ...
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/PIP-Technical-Team/piptb}
+  \item Report bugs at \url{https://github.com/PIP-Technical-Team/piptb/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: R.Andres Castaneda \email{acastanedaa@worldbank.org}
+
+}
