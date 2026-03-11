@@ -110,78 +110,228 @@ arrow_data/parquet/
 
 ## 4. Computation Engine ({piptb} Package)
 
-### High-Level Computation Flow
+### Current State & Refactoring Needs
 
+The current {piptb} package is legacy code that performs computation but requires significant restructuring for Table Maker:
+
+**Current Functions** (need refactoring):
+- `tb()` - Generic cross-tabulation function using collapse::collapv()
+  - **Issue**: Too generic; mixes grouping logic, statistics selection, and output formatting
+  - **Current behavior**: Accepts arbitrary variables/statistics; limited to basic aggregations (mean, sum, median, min, max)
+  - **Problem for Table Maker**: Cannot compute specialized indicators (poverty gaps, Gini, percentiles)
+
+- `tb_heap()` - Generates all possible dimension combinations for a single survey
+  - **Issue**: Over-inclusive; generates combinations not requested by users (up to 4-way breakdowns)
+  - **Problem for Table Maker**: API requests specific dimension combinations; this creates unnecessary output
+  - **Output format**: Uses prefixed column names ("dim_*", "int_*") that don't match API response schema
+
+- `table_baker()` - Loads pre-computed Arrow data and retrieves raw results
+  - **Current role**: Arrow query layer (should work as-is, but may need optimization)
+  - **Issue**: No computation; just filtering and collecting data
+
+- `tb_create_arrow()` - Pre-computes all indicators and writes to Arrow
+  - **Issue**: Pre-computation approach; designed for batch generation, not API on-demand queries
+  - **Problem for Table Maker**: API needs dynamic computation at query time, not pre-stored results
+
+### Required Refactoring Strategy
+
+**Phase 1: Create Measure-Specific Functions**
+
+Replace the generic `tb()` function with specialized functions:
+
+```r
+# Core poverty measures
+compute_poverty_headcount(microdata, welfare_var, poverty_line, weight_var)
+  └─ Returns: weighted proportion of population below poverty_line
+  
+compute_poverty_gap(microdata, welfare_var, poverty_line, weight_var)
+  └─ Returns: average depth of poverty (normalized gap)
+  
+compute_poverty_severity(microdata, welfare_var, poverty_line, weight_var)
+  └─ Returns: squared poverty gap (Foster-Greer-Thorbecke P2)
+
+# Welfare measures
+compute_mean_welfare(microdata, welfare_var, weight_var)
+  └─ Returns: weighted mean welfare level
+  
+compute_median_welfare(microdata, welfare_var, weight_var)
+  └─ Returns: weighted percentile at 50th position
+  
+compute_percentile(microdata, welfare_var, weight_var, percentile = c(10, 25, 75, 90))
+  └─ Returns: weighted percentile at specified levels
+
+# Inequality measures
+compute_gini(microdata, welfare_var, weight_var)
+  └─ Returns: Gini coefficient (requires specialized algorithm with weights)
+  
+compute_population(microdata, weight_var)
+  └─ Returns: total weighted population
+
+# Proposed implementation approach:
+# - Leverage {pipster} functions where available (e.g., poverty headcount)
+# - For missing measures, implement using data.table + collapse for speed
+# - All functions accept pre-grouped data and compute within groups
 ```
-1. Validate input
-   ├─ Check surveys exist
-   ├─ Check measures supported
-   └─ Check dimensions valid
 
-2. Load filtered microdata
-   └─ Arrow filter(country, year, welfare_type, reporting_level) → collect()
+**Phase 2: Create API-Facing Orchestrator**
 
-3. For each (measure, dimension_combination):
-   ├─ 3a. Pre-compute derived variables if needed
-   ├─ 3b. Group microdata by dimensions
-   ├─ 3c. Call computation function
-   └─ 3d. Collect results
-
-4. Combine results
-   └─ Aggregate into single output table
-
-5. Return to API
-```
-
-### Supported Measures
-
-Core computation functions (implementations leverage {pipster} where available):
-
-- `compute_poverty_headcount()` - Proportion below poverty line
-- `compute_poverty_gap()` - Average depth of poverty
-- `compute_poverty_severity()` - Squared poverty gap
-- `compute_mean_welfare()` - Average welfare
-- `compute_median_welfare()` - Median welfare
-- `compute_gini()` - Gini coefficient
-- `compute_population()` - Weighted population count
-
-### Computation Interface
+Replace/refactor `table_baker()` into a true computation orchestrator:
 
 ```r
 table_maker_compute(
-  surveys,          # list of data.frames (filtered from Arrow)
-  measures,         # c("poverty_headcount", "mean_welfare", "gini")
-  breakdowns,       # c("gender", "area") — up to 3
-  welfare_var,      # "welfare_ppp" or "welfare_lcu"
-  poverty_lines,    # c(1.9, 3.2) — for poverty measures
+  surveys,            # list of pre-filtered data.frames from Arrow
+  measures,           # c("poverty_headcount", "mean_welfare", "gini")
+  breakdowns,         # c("gender", "area") — specific user request, not all combos
+  welfare_var,        # "welfare_ppp" or "welfare_lcu"
+  poverty_lines = 1.9,
   weight_var = "weight",
-  subgroup_totals = TRUE
-) -> data.frame
+  include_totals = TRUE
+)
+  └─ Orchestrates computation:
+      1. Validate measure/breakdown compatibility
+      2. For each measure:
+         - Create derived variables if needed (e.g., poor = welfare < poverty_line)
+         - Group by breakdowns
+         - Call measure-specific function
+         - Collect results with metadata (n, se)
+      3. Bind results; add "all" rows if include_totals=TRUE
+      4. Return in API schema format
 ```
 
-### Output Format
+**Phase 3: Decompose Current Logic**
+
+Current issues in existing functions:
+
+- **`tb()` function problems**:
+  - Line 75-84: Generic stats selection doesn't support poverty gap, Gini
+  - Line 86-103: Poverty line handling hard-coded for binary poor/not-poor; can't compute multiple statistics at same poverty line
+  - Line 105-135: collapse::collapv() provides only basic aggregations; can't compute standard errors
+  - Line 160-180: Output formatting mixes column naming logic; not suitable for API responses
+
+- **`tb_heap()` function problems**:
+  - Line 15-25: Generates ALL possible dimension combinations (1-way, 2-way, 3-way, 4-way)
+  - Line 31-40: Calls `tb()` for each combination; massive redundant computation
+  - Line 60-68: Adds prefix columns; extra processing overhead
+  - Use case: Batch pre-computation only; unusable for API on-demand queries
+
+**Migration Path**:
+1. Keep `table_baker()` as Arrow filtering layer
+2. Remove dependency on `tb()` and `tb_heap()` for API
+3. Implement measure-specific functions independently
+4. Create new `table_maker_compute()` orchestrator
+5. Optional: Retain legacy `tb()` for backward compatibility in other tools
+
+### High-Level Computation Flow (New Design)
+
+```
+API Request
+│
+├─ 1. Validate request
+│  ├─ Check surveys loaded successfully
+│  ├─ Check measures in supported list
+│  ├─ Check breakdowns exist in surveys
+│  └─ Check poverty_lines are numeric/positive
+│
+├─ 2. Load filtered Arrow data
+│  └─ table_baker(COL = c(2010, 2012), ...) 
+│     └─ Returns: list of data.frames, one per survey
+│
+├─ 3. For each (measure, poverty_line if applicable):
+│  │
+│  ├─ 3a. Prepare microdata
+│  │  └─ Create derived variables if needed
+│  │     (e.g., poor = (welfare_ppp < 1.9))
+│  │
+│  ├─ 3b. Group by breakdowns
+│  │  └─ data.table grouping: DT[, measure_func(), by = breakdowns]
+│  │
+│  ├─ 3c. Call measure-specific function
+│  │  └─ compute_poverty_headcount(DT, weight_var = "weight")
+│  │
+│  └─ 3d. Add metadata
+│     └─ Compute n_unweighted, n_weighted, se (if applicable)
+│
+├─ 4. Add subgroup totals (if requested)
+│  └─ For each breakdown: add row with value = aggregate
+│
+├─ 5. Combine all results
+│  └─ rbindlist() all measure results into single data.frame
+│
+└─ 6. Return formatted output
+   └─ Columns: country, year, [breakdown cols], measure, poverty_line, value, se, n, ...
+```
+
+### Computation Interface (Proposed)
 
 ```r
+# Main orchestrator function (new)
+table_maker_compute(
+  surveys,            # list of data.frames, one per survey
+  measures,           # c("poverty_headcount", "gini", "mean_welfare")
+  breakdowns,         # c("gender", "area")
+  welfare_var,        # "welfare_ppp"
+  poverty_lines = 1.9,
+  weight_var = "weight",
+  include_totals = TRUE
+) -> data.frame
+
+# Output columns
 data.frame(
   country = "COL",
   year = 2010,
-  gender = "male",           # if in breakdowns
-  area = "urban",            # if in breakdowns
+  gender = "male",              # breakdown dimensions (if requested)
+  area = "urban",
   measure = "poverty_headcount",
-  poverty_line = 1.9,        # if applicable
-  value = 0.154,
-  se = 0.012,                # standard error
-  n_weighted = 1234567,
-  n_unweighted = 1234
+  poverty_line = 1.9,           # only for poverty measures
+  value = 0.154,                # computed indicator
+  se = 0.012,                   # standard error
+  n_weighted = 1234567,         # total weighted sample
+  n_unweighted = 1234           # unweighted count
 )
 ```
 
+### Supported Measures (Phase 1 MVP)
+
+- `poverty_headcount`: Proportion below poverty line (wrap {pipster} if available)
+- `poverty_gap`: Average depth; requires: `sum((poverty_line - welfare) * poor) / weighted_pop`
+- `mean_welfare`: Weighted mean of welfare variable
+- `median_welfare`: Weighted 50th percentile
+- `gini`: Gini coefficient with sampling weights
+- `population`: Total weighted population
+
+**Phase 2 Extensions**:
+- Additional percentiles (10th, 25th, 75th, 90th)
+- Poverty severity (Foster-Greer-Thorbecke P2)
+- Additional inequality measures if needed
+
 ### Key Implementation Details
 
-- **Sampling Weights**: All aggregations apply weights using collapse::collapv() or equivalent
-- **Multiple Poverty Lines**: Compute all in one pass to minimize re-computation
-- **Subgroup Totals**: Include "all" rows when breakdowns requested (e.g., gender="all")
-- **Performance**: Profile and optimize data loading, grouping, and aggregation (Gini typically slowest)
+**Grouping & Aggregation**:
+- Use `data.table` grouped operations for speed
+- Apply weights in all aggregations via `collapse::collapv()` or {data.table} `by`
+- Standard errors require variance estimation (design-based with weights)
+
+**Multiple Poverty Lines**:
+- Create all derived variables upfront: `poor_1_9 = welfare < 1.9`, `poor_3_2 = welfare < 3.2`
+- Compute poverty headcount once per line to avoid redundant computation
+- Result: Multiple rows per group (one per poverty line)
+
+**Subgroup Totals**:
+- If user requests breakdown by gender, compute totals across all gender values
+- Include as row with gender="all" or gender=NA (TBD in Q6)
+- Use weighted aggregate of all gender groups
+
+**Standard Errors** (Design-Based):
+- For weighted statistics, SE depends on sampling design
+- Proposed: Use design-based SE (assuming simple random sampling with weights)
+- Formula for mean: `SE = sqrt(V / n_unweighted)` where V is weighted variance
+- Formula for proportions: `SE = sqrt(p * (1-p) / eff_n)` where eff_n = (sum(w))^2 / sum(w^2)
+
+**Performance Optimization**:
+- **Data Loading**: Arrow partition pruning is critical (avoid loading unnecessary welfare types)
+- **Grouping**: Use data.table key-based grouping for sorted joins
+- **Gini Computation**: Profile separately; typically 30-50% of compute time for inequality-heavy queries
+- **Memory**: Monitor data.frame size in memory; consider streaming for very large surveys
 
 ## 5. API Layer ({piptbapi} Package)
 
