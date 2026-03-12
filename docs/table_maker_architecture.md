@@ -2,10 +2,10 @@
 
 ## 1. System Overview
 
-Table Maker is a feature enabling dynamic computation of poverty and inequality indicators from microdata. Users can:
+Table Maker is a feature enabling computation of poverty and inequality indicators from microdata. Users can:
 - Select up to 15 surveys (country-year pairs)
 - Request multiple measures (poverty headcount, Gini, mean welfare, etc.)
-- Specify up to 3 breakdown dimensions (gender, age, education, area, etc.)
+- Specify up to 4 breakdown dimensions (gender, age, education, area, etc.)
 - Receive results as JSON with computed indicators
 
 ## 2. Data Architecture
@@ -23,9 +23,9 @@ Harmonized Microdata (.qs2 files)
     ↓
 Arrow/Parquet Partitioned Dataset
     ↓
-Computation Engine ({piptb} package)
+Computation Engine ({piptm} package)
     ↓
-API Layer (Plumber, {piptbapi} package)
+API Layer (Plumber)
     ↓
 Platform UI
 ```
@@ -38,11 +38,7 @@ Platform UI
 
 ### Harmonization Pipeline
 
-Handled by {pipdata} package:
-- Standardize variable names, units, definitions
-- Validate data quality
-- Ensure analysis-ready format
-
+Handled by {pipdata} package
 Output: Standardized .qs2 files (metadata + microdata)
 
 ### Harmonized Data Storage
@@ -59,60 +55,83 @@ Output: Standardized .qs2 files (metadata + microdata)
 
 ### Partition Structure
 
-Partitioned by key dimensions for efficient filtering:
+Partitioned by key dimensions for efficient filtering. **Note: CHN is excluded entirely** (only has group data, no microdata for covariates):
 
 ```
 arrow_data/parquet/
 ├─ country_code=COL/
 │  ├─ surveyid_year=2010/
-│  │  ├─ welfare_type=INC/
-│  │  │  └─ reporting_level=NATIONAL/
-│  │  │     ├─ part-0.parquet
-│  │  │     └─ part-1.parquet
-│  │  └─ welfare_type=CON/
-│  │     └─ reporting_level=NATIONAL/
-│  │        └─ part-0.parquet
+│  │  └─ welfare_type=INC/
+│  │     ├─ part-0.parquet
+│  │     └─ part-1.parquet
 │  └─ surveyid_year=2012/
-│     ├─ welfare_type=INC/...
-│     └─ welfare_type=CON/...
+│     ├─ welfare_type=INC/
+│     │  └─ part-0.parquet
+│     └─ welfare_type=CON/
+│        └─ part-0.parquet
 └─ country_code=IND/
-   └─ [similar structure]
+   └─ surveyid_year=2011/
+      └─ welfare_type=CON/
+         └─ part-0.parquet
 ```
 
 ### Partition Dimensions
 
-- **country_code**: Country (e.g., COL, IND)
+- **country_code**: Country (e.g., COL, IND, BOL) — **CHN is excluded**
 - **surveyid_year**: Survey year (e.g., 2010, 2015)
-- **welfare_type**: Income (INC) or Consumption (CON)
-- **reporting_level**: NATIONAL, URBAN, RURAL, etc.
+- **welfare_type**: Income (INC) or Consumption (CON) — only when available for that survey
+
+**Removed dimensions**:
+- **reporting_level**: Not partitioned. Reason: CHN is the only country with multiple reporting levels (NATIONAL, URBAN, RURAL), but CHN has no microdata—only group aggregates. All other countries have only one reporting level (NATIONAL). Therefore, reporting_level is not a useful partition dimension and is omitted. 
 
 ### Generation Strategy
 
-**Recommended Approach: Smart On-Demand with Version Tracking**
+**Approach: Pre-Generation Only with Release Metadata**
 
-- **Version Tracking**: Each partition records:
-  - Source data hash (SHA256 of .qs2 file)
-  - Source file timestamp
-  - Arrow creation timestamp
+- **All Arrow datasets are pre-generated** before API deployment
+  - No on-demand generation at query time
+  - All partitions created and validated before release
+  - Generation triggered by PIP release cycles, not by individual API requests
+
+- **Release Metadata Manifest**: For each PIP release, a manifest file specifies:
+  - Available datasets (country, year, welfare_type combinations)
+  - Arrow generation timestamp
   - {pipdata} version used
-  - Data lineage (file path, row count, size)
+  - Data quality flags
+  - Example structure:
+    ```json
+    {
+      "release_date": "2026-03-04",
+      "pipdata_version": "0.8.2",
+      "datasets": [
+        {"country": "COL", "year": 2010, "welfare_type": "INC"},
+        {"country": "COL", "year": 2012, "welfare_type": "INC"},
+        {"country": "COL", "year": 2012, "welfare_type": "CON"},
+        {"country": "IND", "year": 2011, "welfare_type": "CON"}
+      ],
+      "excluded_countries": ["CHN"],
+      "excluded_partitions": ["reporting_level"]
+    }
+    ```
 
-- **Staleness Detection**:
-  - Before API query: Check if source .qs2 file hash matches recorded hash
-  - Match → Use existing partition
-  - Mismatch → Regenerate partition
-  - Missing → Generate on first request
+- **API Initialization**: On startup, API loads release metadata to determine available datasets
+  - No runtime dataset discovery; use manifest for validation
+  - Performance benefit: Pre-validated, pre-computed data
 
-- **Optional Pre-Generation**:
-  - During PIP releases, proactively regenerate changed partitions
-  - Result: ~90% of queries hit pre-generated data
-  - Remaining ~10%: On-demand generation
+## 4. Computation Engine ({piptm} Package)
 
-## 4. Computation Engine ({piptb} Package)
+### Architecture & Development Approach
 
-### Current State & Refactoring Needs
+A new {piptm} package will be created (not refactoring legacy {piptb}) with the following design:
 
-The current {piptb} package is legacy code that performs computation but requires significant restructuring for Table Maker:
+**Principle**: Implement custom functions in {piptm} with reference to existing implementations in {wbpip} and {pipapi}, but without creating dependencies on external packages for computation.
+
+**Implementation Strategy**:
+- Copy/adapt algorithmic logic from {wbpip} and {pipapi} where useful
+- Implement as native {piptm} functions
+- Self-contained computation engine
+
+### Core Design: Measure-Specific Functions (New in {piptm})
 
 **Current Functions** (need refactoring):
 - `tb()` - Generic cross-tabulation function using collapse::collapv()
@@ -135,47 +154,57 @@ The current {piptb} package is legacy code that performs computation but require
 
 ### Required Refactoring Strategy
 
-**Phase 1: Create Measure-Specific Functions**
+**Phase 1: Implement Measure Functions**
 
-Replace the generic `tb()` function with specialized functions:
+Create specialized, focused functions for each measure:
 
 ```r
 # Core poverty measures
 compute_poverty_headcount(microdata, welfare_var, poverty_line, weight_var)
   └─ Returns: weighted proportion of population below poverty_line
+  └─ Implementation: Custom in {piptm}, referencing {wbpip} algorithm
   
 compute_poverty_gap(microdata, welfare_var, poverty_line, weight_var)
   └─ Returns: average depth of poverty (normalized gap)
+  └─ Implementation: Custom in {piptm}, referencing {pipapi} approach
   
 compute_poverty_severity(microdata, welfare_var, poverty_line, weight_var)
   └─ Returns: squared poverty gap (Foster-Greer-Thorbecke P2)
+  └─ Implementation: Custom in {piptm}
 
 # Welfare measures
 compute_mean_welfare(microdata, welfare_var, weight_var)
   └─ Returns: weighted mean welfare level
+  └─ Implementation: data.table or collapse
   
 compute_median_welfare(microdata, welfare_var, weight_var)
   └─ Returns: weighted percentile at 50th position
+  └─ Implementation: Custom weighted percentile in {piptm}
   
 compute_percentile(microdata, welfare_var, weight_var, percentile = c(10, 25, 75, 90))
   └─ Returns: weighted percentile at specified levels
+  └─ Implementation: Custom in {piptm}
 
 # Inequality measures
 compute_gini(microdata, welfare_var, weight_var)
   └─ Returns: Gini coefficient (requires specialized algorithm with weights)
+  └─ Implementation: Custom in {piptm}, referencing {wbpip} algorithm
   
 compute_population(microdata, weight_var)
   └─ Returns: total weighted population
+  └─ Implementation: Simple weighted sum
 
-# Proposed implementation approach:
-# - Leverage {pipster} functions where available (e.g., poverty headcount)
-# - For missing measures, implement using data.table + collapse for speed
+# Implementation Approach:
+# - All functions implemented natively in {piptm}
+# - Reference {wbpip} and {pipapi} for algorithms, copy logic as needed
+# - No external dependencies for computation
 # - All functions accept pre-grouped data and compute within groups
+# - All functions return NA for missing dimensions (not skip/fail)
 ```
 
-**Phase 2: Create API-Facing Orchestrator**
+**Phase 2: Create Orchestrator Function**
 
-Replace/refactor `table_baker()` into a true computation orchestrator:
+Create main computation orchestrator:
 
 ```r
 table_maker_compute(
@@ -198,30 +227,47 @@ table_maker_compute(
       4. Return in API schema format
 ```
 
-**Phase 3: Decompose Current Logic**
+Handle missing breakdown variables intentionally:
 
-Current issues in existing functions:
+**Scenario**: User requests breakdown by ["gender", "education", "age"], but survey lacks "age" variable.
+- Include all rows from survey with age=NA
+- Compute measures across entire survey (not grouped by age)
+- Clarify in response metadata that age dimension is missing
+- User gets results with age=NA, allowing comparison with other surveys
 
-- **`tb()` function problems**:
-  - Line 75-84: Generic stats selection doesn't support poverty gap, Gini
-  - Line 86-103: Poverty line handling hard-coded for binary poor/not-poor; can't compute multiple statistics at same poverty line
-  - Line 105-135: collapse::collapv() provides only basic aggregations; can't compute standard errors
-  - Line 160-180: Output formatting mixes column naming logic; not suitable for API responses
+**Implementation**:
 
-- **`tb_heap()` function problems**:
-  - Line 15-25: Generates ALL possible dimension combinations (1-way, 2-way, 3-way, 4-way)
-  - Line 31-40: Calls `tb()` for each combination; massive redundant computation
-  - Line 60-68: Adds prefix columns; extra processing overhead
-  - Use case: Batch pre-computation only; unusable for API on-demand queries
+```r
+# When loading microdata for a survey:
+breakdowns_requested <- c("gender", "education", "age")
+breakdowns_available <- names(survey_df)
+missing_breakdowns <- setdiff(breakdowns_requested, breakdowns_available)
 
-**Migration Path**:
-1. Keep `table_baker()` as Arrow filtering layer
-2. Remove dependency on `tb()` and `tb_heap()` for API
-3. Implement measure-specific functions independently
-4. Create new `table_maker_compute()` orchestrator
-5. Optional: Retain legacy `tb()` for backward compatibility in other tools
+if (length(missing_breakdowns) > 0) {
+  # Add missing dimensions as NA columns
+  for (dim in missing_breakdowns) {
+    survey_df[[dim]] <- NA  # All rows have NA for missing dimension
+  }
+  # Store metadata about missing dimensions
+  survey_metadata$missing_dimensions <- missing_breakdowns
+}
 
-### High-Level Computation Flow (New Design)
+# During computation:
+# - Groups will include (gender, education, NA)
+# - Each group computes measures across all matching rows
+# - Results include rows with dim=NA for missing dimensions
+# - API metadata indicates which dimensions were missing
+```
+
+**Rationale**:
+- Simplifies API logic: Always include requested surveys in results
+- User sees all available data even if dimensions don't align
+- Missing dimension represented explicitly (NA, not absent)
+- Enables cross-survey comparison despite different available dimensions
+
+
+
+### High-Level Computation Flow 
 
 ```
 API Request
@@ -300,9 +346,7 @@ data.frame(
 - `population`: Total weighted population
 
 **Phase 2 Extensions**:
-- Additional percentiles (10th, 25th, 75th, 90th)
-- Poverty severity (Foster-Greer-Thorbecke P2)
-- Additional inequality measures if needed
+- Additional measures if needed
 
 ### Key Implementation Details
 
@@ -333,7 +377,7 @@ data.frame(
 - **Gini Computation**: Profile separately; typically 30-50% of compute time for inequality-heavy queries
 - **Memory**: Monitor data.frame size in memory; consider streaming for very large surveys
 
-## 5. API Layer ({piptbapi} Package)
+## 5. API Layer 
 
 ### Request Schema
 
@@ -348,9 +392,8 @@ data.frame(
     { "measure_name": "gini_coefficient" },
     { "measure_name": "mean_welfare" }
   ],
-  "breakdowns": ["gender", "area"],
+  "breakdowns": ["gender", "area", "education"],
   "welfare_type": "consumption",
-  "reporting_level": "national",
   "include_totals": true,
   "format": "json"
 }
@@ -370,6 +413,7 @@ data.frame(
       "year": 2010,
       "gender": "male",
       "area": "urban",
+      "education": "primary",
       "measure_name": "poverty_headcount",
       "poverty_line": 1.9,
       "value": 0.154,
@@ -382,6 +426,13 @@ data.frame(
     "surveys_returned": 2,
     "rows_returned": 48,
     "surveys_not_found": [],
+    "breakdown_positions": {
+      "columns": "gender",
+      "rows": "area",
+      "super_columns": "education",
+      "super_rows": null
+    },
+    "missing_dimensions": [],
     "warnings": []
   }
 }
@@ -395,19 +446,44 @@ data.frame(
   "request_id": "req-abc124",
   "computation_time_ms": 234,
   "data_version": "2026-03-04T15:30:00Z",
-  "data": [ /* results for available surveys */ ],
+  "data": [
+    {
+      "country": "COL",
+      "year": 2010,
+      "gender": "male",
+      "area": "urban",
+      "education": null,
+      "measure_name": "poverty_headcount",
+      "poverty_line": 1.9,
+      "value": 0.154,
+      "se": 0.012,
+      "n_weighted": 1234567,
+      "n_unweighted": 1234
+    }
+  ],
   "metadata": {
     "surveys_returned": 2,
     "rows_returned": 24,
     "surveys_not_found": ["HND_2006"],
+    "breakdown_positions": {
+      "columns": "gender",
+      "rows": "area",
+      "super_columns": "education",
+      "super_rows": null
+    },
+    "missing_dimensions": [
+      {
+        "survey": "BRA_2018",
+        "missing": ["education"]
+      }
+    ],
     "warnings": [
       "Survey HND_2006 not found; skipped.",
-      "Survey BRA_2018 lacks 'age' variable; returned without age breakdown."
+      "Survey BRA_2018 lacks 'education' variable; returned with education=NA."
     ]
   }
 }
 ```
-
 ### Response Schema: Error
 
 ```json
@@ -419,6 +495,7 @@ data.frame(
   "data": null
 }
 ```
+
 
 ### Common Error Codes
 
@@ -477,60 +554,279 @@ function(req) {
 }
 ```
 
-## 6. Survey Metadata Management
+## 6. Survey Metadata Management (Release-Based Manifest)
 
-### What to Store
+### Release Metadata Manifest
 
-Minimally required metadata:
-- **Survey Inventory**: List of all available country-year pairs
-- **Variable Inventory**: Which variables exist per survey (used to validate requested breakdowns)
+All survey metadata is defined in a **Release Metadata Manifest** JSON file that is generated once per PIP release and embedded in the {piptm} package:
 
-### Implementation Strategy
+**Location**: `inst/release_manifest_2026-03-04.json` (or date of release)
 
-**Option 1: Load from {pipdata} (Recommended)**
-- On API startup, scan all survey metadata .qs2 files
-- Build in-memory lookup table:
-  ```r
-  survey_variables <- list(
-    "COL_2010_INC" = c("welfare", "gender", "age", "area", ...),
-    "BOL_2008_CON" = c("welfare", "gender", "area", ...)
+```json
+{
+  "release_date": "2026-03-04T00:00:00Z",
+  "pipdata_version": "0.8.2",
+  "datasets": [
+    {
+      "country": "COL",
+      "country_name": "Colombia",
+      "year": 2010,
+      "survey_id": "COL_2010_GEIH_V1",
+      "welfare_type": "INC",
+      "welfare_var": "income",
+      "weight_var": "weight",
+      "n_weighted": 12345678,
+      "n_unweighted": 5432,
+      "available_breakdowns": ["gender", "area", "education", "age"]
+    },
+    {
+      "country": "COL",
+      "country_name": "Colombia",
+      "year": 2012,
+      "survey_id": "COL_2012_GEIH_V1",
+      "welfare_type": "INC",
+      "welfare_var": "income",
+      "weight_var": "weight",
+      "n_weighted": 13245678,
+      "n_unweighted": 5832,
+      "available_breakdowns": ["gender", "area", "education", "age"]
+    },
+    {
+      "country": "IND",
+      "country_name": "India",
+      "year": 2011,
+      "survey_id": "IND_2011_NSS_V1",
+      "welfare_type": "CON",
+      "welfare_var": "consumption",
+      "weight_var": "weight",
+      "n_weighted": 98765432,
+      "n_unweighted": 101234,
+      "available_breakdowns": ["gender", "area"]
+    }
+  ],
+  "excluded_countries": ["CHN"],
+  "excluded_partitions": ["reporting_level"],
+  "excluded_surveys": [],
+  "metadata_notes": "CHN excluded because only group aggregates available (no microdata). Reporting level excluded as all included countries have NATIONAL only."
+}
+```
+
+### Key Characteristics
+
+1. **Static**: Generated once per PIP release, does not change at runtime
+2. **Complete**: Lists all available surveys and their properties
+3. **Comprehensive**: Includes breakdown availability, sample sizes, welfare variable names
+4. **Self-Documenting**: Explains exclusions and design decisions
+
+### API Initialization
+
+```r
+# At package load time:
+.onLoad <- function(libname, pkgname) {
+  # Load release manifest from package
+  manifest_file <- system.file("release_manifest_2026-03-04.json", package = "piptm")
+  .piptm_manifest <<- jsonlite::read_json(manifest_file)
+}
+
+# API endpoint validation:
+validate_request <- function(request) {
+  surveys_requested <- request$surveys
+  
+  # Check against manifest
+  available_surveys <- .piptm_manifest$datasets |>
+    lapply(function(x) paste0(x$country, "_", x$year)) |>
+    unlist()
+  
+  not_found <- setdiff(
+    paste0(surveys_requested$country, "_", surveys_requested$year),
+    available_surveys
   )
-  ```
-
-**Option 2: Extract from Arrow Schema**
-- Arrow already knows its columns
-- Check schema when loading partition
-- Slightly slower but requires no preprocessing
-
-## 7. Versioning Strategy
-
-### Arrow Dataset Metadata Manifest
-
-Store version information with each Arrow partition:
-
-```
-├─ Generation timestamp: 2026-03-04T15:30:00Z
-├─ {pipdata} version: 0.8.2
-├─ {pipdata} Git commit: abc123def456
-├─ Source surveys:
-│  ├─ AGO_2008: hash=xyz789
-│  ├─ ALB_2005: hash=abc123
-│  └─ [all with content hash]
-├─ Harmonization scripts version: v1.2.3
-├─ Arrow format version: 1.0
-├─ Total surveys: 450
-├─ Total microdata rows: 12,345,678
-└─ Data lineage: traceable from raw → harmonized → Arrow
+  
+  if (length(not_found) > 0) {
+    return(list(valid = FALSE, error = paste("Surveys not found:", paste(not_found, collapse = ", "))))
+  }
+  
+  return(list(valid = TRUE))
+}
 ```
 
-### Versioning Components
+### No Runtime Dataset Discovery
 
-Track versions of:
-- {pipdata} harmonization
-- Arrow dataset generation
-- {piptb} computation engine
+- API does NOT scan Arrow directory for available datasets
+- API does NOT query {pipdata} package for survey metadata
+- API ONLY uses manifest to determine what datasets exist
+- Ensures consistent, predictable behavior per release
+- Manifest can be version-controlled and audited
 
-## 8. Logging Strategy
+## 7. Versioning Strategy (Release-Based)
+
+### Release Versioning
+
+Versioning is tied to **PIP Release Cycles**, not individual partition updates:
+
+```
+Release: PIP 2026-03-04
+├─ Version string: "2026-03-04"
+├─ Release date: 2026-03-04T00:00:00Z
+├─ Included {pipdata} version: 0.8.2
+├─ Included Arrow datasets: All surveys in release manifest
+├─ API version: 1.0 (no breaking changes within release)
+└─ {piptm} package version: 1.0.2 (patch for this release)
+```
+
+### Version Information in API Response
+
+Every API response includes the release date:
+
+```json
+{
+  "status": "success",
+  "request_id": "req-abc123",
+  "computation_time_ms": 456,
+  "data_version": "2026-03-04T15:30:00Z",
+  "data": [ /* results */ ]
+}
+```
+
+### Updating to New Release
+
+When PIP releases new data:
+
+1. **Generate new Arrow datasets** from updated {pipdata}
+2. **Create new release manifest** (e.g., `release_manifest_2026-06-15.json`)
+3. **Update {piptm} package**:
+   - Add new manifest file
+   - Update default manifest path in .onLoad()
+   - Bump minor version (e.g., 1.1.0)
+4. **Deploy API** with new {piptm} version
+
+Old releases remain available by installing older {piptm} versions.
+
+### No Per-Partition Versioning
+
+Unlike the original design, we do NOT track versions per partition (country-year-welfare_type):
+- **Before**: reporting_level=NATIONAL v1.2, reporting_level=URBAN v1.1, etc.
+- **Now**: All datasets in a release have same version (release date)
+- **Rationale**: Simpler version management, clearer release semantics, easier deployment
+
+## 8. Breakdown Dimension Ordering Logic
+
+### Table Structure Determination
+
+The user-specified `breakdowns` vector order determines the final table structure:
+
+```
+breakdowns[1] → columns (innermost horizontal dimension)
+breakdowns[2] → rows (innermost vertical dimension)
+breakdowns[3] → super_columns (outer horizontal dimension)
+breakdowns[4] → super_rows (outer vertical dimension)
+breakdowns[5+] → Not supported (maximum 4 dimensions)
+```
+
+### Examples
+
+**Example 1: Single Breakdown**
+```r
+breakdowns = ["gender"]
+# Result: Columns structure
+# | female | male | all |
+# |--------|------|-----|
+# | value  | value| value |
+```
+
+**Example 2: Two Breakdowns**
+```r
+breakdowns = ["gender", "area"]
+# Result: 
+#         female       male         all
+#       urban rural  urban rural  urban rural
+# ------+------+-----+------+-----+------+-----+
+#        value  value value  value value  value
+```
+
+**Example 3: Three Breakdowns**
+```r
+breakdowns = ["gender", "area", "education"]
+# Result: super_columns=education, columns=gender, rows=area
+#
+#         education=primary         education=secondary       education=all
+#       female       male          female       male          female      male
+#     urban rural  urban rural    urban rural  urban rural  urban rural  urban rural
+# ----+------+-----+------+-----+------+-----+------+-----+------+-----+------+-----+
+#      value value value value  value value value value  value value value value
+```
+
+**Example 4: Four Breakdowns**
+```r
+breakdowns = ["gender", "area", "education", "age_group"]
+# Result: super_rows=age_group, super_columns=education, columns=gender, rows=area
+#
+# age_group=15-24
+#         education=primary         education=secondary       ...
+#       female       male          female       male
+#     urban rural  urban rural    urban rural  urban rural
+# ----+------+-----+------+-----+------+-----+------+-----+
+#      value value value value  value value value value
+#
+# age_group=25-34
+#         education=primary         education=secondary       ...
+#  ...
+```
+
+### Implementation in API Response
+
+The API response structure is data-centric (not pre-formatted as a table), but includes `breakdown_positions` metadata:
+
+```json
+{
+  "data": [
+    {
+      "country": "COL",
+      "year": 2010,
+      "gender": "female",
+      "area": "urban",
+      "education": "primary",
+      "age_group": "15-24",
+      "measure": "poverty_headcount",
+      "value": 0.154
+    },
+    {
+      "country": "COL",
+      "year": 2010,
+      "gender": "female",
+      "area": "urban",
+      "education": "primary",
+      "age_group": "25-34",
+      "measure": "poverty_headcount",
+      "value": 0.142
+    }
+    // ... more rows ...
+  ],
+  "metadata": {
+    "breakdown_positions": {
+      "columns": "gender",
+      "rows": "area",
+      "super_columns": "education",
+      "super_rows": "age_group"
+    }
+  }
+}
+```
+
+**Client-Side Responsibility**:
+- Client receives breakdown_positions metadata
+- Client uses this to format the table structure
+- Client iterates through data rows and places values in correct table cells
+
+### Ordering Validation
+
+At request time, validate:
+- `breakdowns` array has 1-4 elements
+- All breakdown names are valid column names
+- All breakdowns exist in all requested surveys (or return NA for missing)
+- No duplicate breakdowns in the array
+
+## 10. Logging Strategy
 
 ### Request Logging
 
@@ -558,61 +854,4 @@ Log each API query with:
 - Store: Server logs or logging service
 - Monitor: Track performance, errors, and usage patterns
 
-## 9. Performance Considerations
-
-### Latency Targets
-
-- Typical query (<5 surveys, <5 measures, <2 breakdowns): **<2 seconds**
-- Medium query (10 surveys, 8 measures, 2 breakdowns): **<10 seconds**
-- Large query (15 surveys, 15 measures, 3 breakdowns): **<30 seconds**
-- Target maximum: **60 seconds** before timeout
-
-### Memory Constraints
-
-- Benchmark typical query memory usage
-- Set max query size at ~80% of available memory
-- Return 400 error if exceeded
-- Consider safeguards for large datasets
-
-### Optimization Strategies
-
-- **Arrow Partitioning**: Leverage partition pruning to minimize data loaded
-- **In-Memory Computation**: Use data.table and collapse for fast aggregation
-- **Poverty Lines**: Compute multiple lines in single pass
-- **Caching**: Implement result caching for identical queries (cleared on PIP releases)
-
-### Data Transfer Size
-
-Estimate typical response sizes:
-- 3 surveys × 2 measures × 2 breakdowns × 1 poverty line = 12 rows
-- ~200 bytes per row (JSON) = ~2.4 KB
-- Typical responses: **<100 KB**
-- Large responses: **<5 MB** (gzip compression available if needed)
-
-## 10. Data Quality & Validation
-
-### Request Validation
-
-Before computation, validate:
-- Surveys exist and are available
-- Measures are supported
-- Breakdown dimensions are valid
-- Requested variables exist in selected surveys
-- Poverty lines are numeric and positive
-
-### Handling Missing Data
-
-**Missing Breakdowns**: If user requests age breakdown but survey lacks age variable
-- Skip that survey with warning
-- Return results for surveys with the variable
-- Include warning in response metadata
-
-**Partial Data Availability**: If user requests COL 2010, 2012, 2015 but 2015 is incomplete
-- Return results for 2010-2012
-- Include missing surveys in metadata
-- Status: "partial"
-
-**Empty Groups**: After filtering/grouping, a combination has zero observations
-- Return zero or null value (TBD)
-- Include sample size (n=0)
-- Document in output
+## 11. Performance Considerations -for later

@@ -1,44 +1,5 @@
 # Table Maker: Open Design Questions
 
-## Arrow Dataset Generation
-
-### Q1: Arrow Generation Trigger Strategy
-**Status**: 🟡 **CLARIFICATION REQUIRED**
-
-**Current Options**:
-- **Option A (On-Demand)**: Generate only when first queried
-  - Pros: No unnecessary computation; always fresh
-  - Cons: First query for new survey is slow; adds API complexity
-  
-- **Option B (Hybrid - RECOMMENDED)**: Scheduled batch + on-demand fallback
-  - Batch job: Pre-generate all surveys periodically (e.g., after PIP releases)
-  - Fallback: API triggers generation if user requests non-existent partition
-  - Pros: Best of both; 99% hit pre-generated partitions
-  - Cons: More complex implementation
-
-**Decision Needed**: Which approach?
-
----
-
-### Q2: Survey Metadata Storage & Loading
-**Status**: 🟡 **SPECIFICATION REQUIRED**
-
-**Question**: How should survey metadata be loaded and cached?
-
-**Options**:
-- **Option 1 (Recommended)**: Load from {pipdata} at API startup
-  - Scan all survey metadata .qs2 files
-  - Build in-memory lookup table
-  - Faster runtime; requires preprocessing
-  
-- **Option 2**: Extract from Arrow schema on-demand
-  - Arrow provides column info automatically
-  - Slightly slower; no startup preprocessing
-
-**Decision Needed**: Which approach? Can {pipdata} metadata be reliably loaded as-is?
-
----
-
 ## API Design Decisions
 
 ### Q3: Welfare Type Selection
@@ -60,23 +21,6 @@
 
 **Decision Needed**: Confirmation + API schema design
 
----
-
-### Q4: Reporting Level (National vs. Urban/Rural)
-**Status**: 🟡 **CLARIFICATION REQUIRED**
-
-**Question**: Should users be able to request specific reporting levels?
-
-**Current Understanding**: Not all surveys have urban/rural breakdown; Arrow is partitioned by reporting_level.
-
-**Options**:
-- **API Default**: Always use NATIONAL if available; error if user requests unavailable level
-- **User Specifies**: API request includes `"reporting_level": "national"`
-- **Return All**: API returns all available levels for each survey
-
-**Recommendation**: **API default to NATIONAL**; error if user requests unavailable level (cleaner UX).
-
-**Decision Needed**: Confirm approach + error handling
 
 ---
 
@@ -136,58 +80,8 @@ With totals:
 
 ---
 
-### Q7: Handling Missing Breakdown Variables
-**Status**: 🔴 **DECISION REQUIRED**
-
-**Scenario**: User requests age breakdown for [COL_2010, BOL_2008].
-- COL_2010 has age ✓
-- BOL_2008 lacks age ✗
-
-**Options**:
-- **Fail Entire Request**: "Survey BOL_2008 lacks age variable"
-  - Strict; forces user to modify query
-  - Clear error messaging
-  
-- **Skip Survey with Warning**: Return results for COL_2010; warn about BOL_2008
-  - Flexible; user gets partial results
-  - Risk: User doesn't notice missing survey
-
-**Recommendation**: **Skip with warning**. Better UX for multi-survey queries.
-
-**Decision Needed**: Confirmation + warning message format
-
----
-
 ## Computation Engine Decisions
 
-### Q8: Measure Computation: Reuse {pipster} or Implement New?
-**Status**: 🔴 **DESIGN REQUIRED**
-
-**Question**: Which functions should compute which measures?
-
-**Current State**: Legacy {piptb} has generic `tb()` function. Need to define measure-specific functions.
-
-**Options**:
-- **Wrap {pipster} Functions**: Leverage production code
-  - Example: `compute_poverty_headcount()` calls `pipster::pipgd_pov_headcount()`
-  - Pros: Reuses proven code; consistent with PIP standards
-  - Cons: {pipster} may not export all needed functions
-  
-- **Implement Custom Functions**: Write from scratch in {piptb}
-  - Pros: Full control; optimized for Table Maker
-  - Cons: Code duplication; maintenance burden
-
-**Known Issues**:
-- **Q8a**: {pipster} does not export a Gini function. How should this be computed?
-- **Q8b**: Can {pipster} functions handle multiple poverty lines in one call, or must we loop?
-- **Q8c**: Can {pipster} functions handle grouped computation by breakdown dimensions?
-
-**Decision Needed**: 
-- Which measures to support in Phase 1?
-- Which approach (wrap vs. implement)?
-- How to handle Gini, multiple poverty lines, grouped computation?
-
----
 
 ### Q9: Memory Management for Large Datasets
 **Status**: 🟡 **CLARIFICATION REQUIRED**
@@ -332,48 +226,6 @@ With totals:
 
 ---
 
-## Data Handling & Validation
-
-### Q15: Handling Partial Data Availability
-**Status**: 🟡 **CLARIFICATION REQUIRED**
-
-**Scenario**: User requests COL 2010, 2012, 2015.
-- 2010, 2012: Complete ✓
-- 2015: Incomplete/preliminary ✗
-
-**Question**: What should API return?
-
-**Options**:
-- **Fail Entire Request**: "2015 data incomplete; resubmit without 2015"
-  - Strict; user must retry
-  
-- **Return Partial Results**: Return 2010-2012; warn about 2015
-  - Flexible; user gets what's available
-  - Risk: User doesn't notice missing data
-
-**Recommendation**: **Return partial with warning**. Include missing surveys in response metadata.
-
-**Decision Needed**: How to flag preliminary/incomplete data in response?
-
----
-
-### Q16: Standard Errors & Confidence Intervals
-**Status**: 🟡 **CLARIFICATION REQUIRED**
-
-**Question**: Should API return standard errors and confidence intervals?
-
-**Current Design**: Output includes `se` (standard error) field.
-
-**Options**:
-- **Include SE only**: Return point estimate + SE; let client compute CI
-- **Include SE + CI**: Return point estimate, SE, and 95% CI bounds
-- **Omit**: Return only point estimates
-
-**Questions**:
-- How should SEs be computed? (Sampling weights, finite population correction?)
-- What confidence level for CIs (95%? user-specified)?
-
-**Decision Needed**: Include SEs? CIs? Computation method?
 
 ---
 
